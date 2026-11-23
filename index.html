@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#ff9f1c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="화폐놀이" />
+  <title>어린이 화폐 계산 놀이</title>
+
+  <!-- 아이콘 및 PWA 매니페스트 -->
+  <link rel="icon" href="./icon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="./icon.png" />
+  <link rel="apple-touch-icon" href="./icon.png" />
+  <link rel="manifest" href="./manifest.json" />
+
+  <style>
+    :root {
+      --bg: #fff8ec;
+      --card: #ffffff;
+      --primary: #ff9f1c;
+      --primary-dark: #e07b00;
+      --accent: #2ec4b6;
+      --accent-dark: #1f9d91;
+      --danger: #ff595e;
+      --text: #2b2d42;
+      --muted: #6c757d;
+      --border: #f1e3cc;
+      --shadow: 0 4px 14px rgba(43, 45, 66, 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Pretendard", sans-serif;
+      touch-action: manipulation;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 820px;
+      height: 100%;
+      height: 100dvh;
+      margin: 0 auto;
+      padding: calc(env(safe-area-inset-top, 0px) + 6px)
+               calc(env(safe-area-inset-right, 0px) + 10px)
+               calc(env(safe-area-inset-bottom, 0px) + 8px)
+               calc(env(safe-area-inset-left, 0px) + 10px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    /* 상단 헤더 */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .brand img {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: clamp(15px, 3.6vw, 20px);
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .score-pill {
+      background: #fff1d6;
+      border: 1.5px solid #ffd180;
+      color: #b55d00;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: clamp(12px, 2.8vw, 14px);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 10px;
+      height: 32px;
+      padding: 0 9px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      transition: transform 0.1s;
+    }
+
+    .icon-btn:active { transform: scale(0.94); }
+    .icon-btn.active {
+      background: #e6f9f7;
+      border-color: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    .install-btn {
+      background: var(--primary);
+      border-color: var(--primary-dark);
+      color: #fff;
+      display: none;
+    }
+
+    /* 모드 & 난이도 선택 바 */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-shrink: 0;
+      flex-wrap: nowrap;
+    }
+
+    .seg-group {
+      display: flex;
+      background: #f3e8d2;
+      padding: 3px;
+      border-radius: 12px;
+      gap: 3px;
+    }
+
+    .seg-group.modes { flex: 1.45; }
+    .seg-group.levels { flex: 1; }
+
+    .seg-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: #6b5b45;
+      font-size: clamp(11px, 2.9vw, 14px);
+      font-weight: 800;
+      padding: 6px 4px;
+      border-radius: 9px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .seg-btn.active {
+      background: #ffffff;
+      color: var(--text);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* 메인 작업 영역 */
+    .workspace {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    /* 상단 문제 + 쟁반 영역 */
+    .stage-panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      overflow: hidden;
+    }
+
+    /* 문제 카드 */
+    .prompt-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(8px, 1.8vh, 14px) 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .item-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .item-emoji {
+      font-size: clamp(32px, 6.5vh, 52px);
+      line-height: 1;
+      flex-shrink: 0;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,0.1));
+    }
+
+    .item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .prompt-label {
+      font-size: clamp(11px, 2.5vw, 13px);
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .item-name {
+      font-size: clamp(15px, 3.8vw, 21px);
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .price-area {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .price-tag {
+      background: #fff3cd;
+      border: 2px solid #ffca2c;
+      color: #995400;
+      border-radius: 12px;
+      padding: 4px 11px;
+      font-size: clamp(17px, 4.4vw, 26px);
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
+
+    .paid-tag {
+      background: #e7f5ff;
+      border: 1.5px solid #74c0fc;
+      color: #1864ab;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: clamp(12px, 2.8vw, 14px);
+      font-weight: 800;
+    }
+
+    /* 돈 쟁반 (계산대) */
+    .tray-card {
+      flex: 1;
+      min-height: 0;
+      background: #fffdf8;
+      border: 2.5px dashed #e2cda8;
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tray-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      flex-shrink: 0;
+    }
+
+    .tray-title {
+      font-size: clamp(12px, 2.8vw, 14px);
+      font-weight: 800;
+      color: #8c6d46;
+    }
+
+    .tray-sum {
+      background: #edf2f4;
+      color: var(--text);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: clamp(12px, 3vw, 15px);
+      font-weight: 900;
+    }
+
+    .tray-sum.highlight {
+      background: #d8f5a2;
+      color: #2b8a3e;
+    }
+
+    .tray-items {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: center;
+      justify-content: center;
+      gap: clamp(5px, 1.3vw, 10px);
+      overflow: hidden;
+      padding: 2px;
+    }
+
+    .tray-empty {
+      color: #b9a487;
+      font-size: clamp(13px, 3.2vw, 16px);
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* 돈 많을 때 자동 축소 */
+    .tray-items.compact .money-piece {
+      transform: scale(0.84);
+      margin: -3px;
+    }
+    .tray-items.super-compact .money-piece {
+      transform: scale(0.72);
+      margin: -6px;
+    }
+
+    /* 피드백 오버레이 바 */
+    .feedback-bar {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      border-radius: 12px;
+      padding: 7px 12px;
+      font-size: clamp(13px, 3.2vw, 16px);
+      font-weight: 800;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+      z-index: 5;
+      animation: popIn 0.2s ease-out;
+    }
+
+    .feedback-bar.show { display: flex; }
+    .feedback-bar.ok {
+      background: #2ec4b6;
+      color: #fff;
+    }
+    .feedback-bar.warn {
+      background: #ff9f1c;
+      color: #fff;
+    }
+    .feedback-bar.err {
+      background: #ff595e;
+      color: #fff;
+    }
+
+    .next-btn-inline {
+      border: none;
+      background: #ffffff;
+      color: #0b7285;
+      font-size: clamp(13px, 3vw, 15px);
+      font-weight: 900;
+      padding: 7px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .next-btn-inline:active { transform: scale(0.95); }
+
+    /* 화폐 비주얼 컴포넌트 */
+    .money-piece {
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      position: relative;
+      transition: transform 0.12s ease;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .money-piece:active { transform: scale(0.9); }
+
+    .money-piece.pop {
+      animation: popIn 0.18s cubic-bezier(0.22, 1.25, 0.36, 1);
+    }
+
+    /* 동전 스타일 */
+    .coin {
+      border-radius: 50%;
+      box-shadow: inset 0 2px 3px rgba(255,255,255,0.65),
+                  inset 0 -3px 4px rgba(0,0,0,0.2),
+                  0 3px 6px rgba(0,0,0,0.16);
+      border: 2.5px solid rgba(0,0,0,0.14);
+      color: #2b2d42;
+      line-height: 1;
+    }
+
+    .coin::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0,0,0,0.18);
+      pointer-events: none;
+    }
+
+    .coin .unit { font-size: 0.52em; font-weight: 800; opacity: 0.8; margin-top: 1px; }
+
+    .m-10 {
+      width: clamp(40px, 9.5vw, 52px);
+      height: clamp(40px, 9.5vw, 52px);
+      font-size: clamp(13px, 3.1vw, 16px);
+      background: radial-gradient(circle at 30% 30%, #f4a261, #c96a2b);
+      color: #fff;
+      border-color: #9e4d18;
+    }
+    .m-50 {
+      width: clamp(44px, 10.2vw, 56px);
+      height: clamp(44px, 10.2vw, 56px);
+      font-size: clamp(13px, 3.2vw, 17px);
+      background: radial-gradient(circle at 30% 30%, #f1f5f9, #b8c4d0);
+    }
+    .m-100 {
+      width: clamp(48px, 11vw, 62px);
+      height: clamp(48px, 11vw, 62px);
+      font-size: clamp(14px, 3.4vw, 18px);
+      background: radial-gradient(circle at 30% 30%, #ffffff, #cbd5e1);
+    }
+    .m-500 {
+      width: clamp(54px, 12.2vw, 68px);
+      height: clamp(54px, 12.2vw, 68px);
+      font-size: clamp(15px, 3.6vw, 20px);
+      background: radial-gradient(circle at 30% 30%, #ffffff, #d7dee6);
+      border-color: #94a3b8;
+    }
+
+    /* 지폐 스타일 */
+    .bill {
+      width: clamp(82px, 19.5vw, 116px);
+      height: clamp(44px, 10vw, 58px);
+      border-radius: 8px;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.6),
+                  0 3px 6px rgba(0,0,0,0.16);
+      border: 2px solid rgba(0,0,0,0.16);
+      color: #fff;
+      font-size: clamp(14px, 3.4vw, 19px);
+      letter-spacing: -0.4px;
+      overflow: hidden;
+    }
+
+    .bill::before {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border: 1px solid rgba(255,255,255,0.45);
+      border-radius: 5px;
+      pointer-events: none;
+    }
+
+    .bill .unit { font-size: 0.56em; font-weight: 700; opacity: 0.92; }
+
+    .m-1000 {
+      background: linear-gradient(135deg, #4dabf7, #1c7ed6);
+      border-color: #1864ab;
+    }
+    .m-5000 {
+      background: linear-gradient(135deg, #ffa94d, #e8590c);
+      border-color: #c2410c;
+    }
+    .m-10000 {
+      background: linear-gradient(135deg, #51cf66, #2b8a3e);
+      border-color: #206a2f;
+    }
+
+    /* 하단 컨트롤 덱 (지갑 or 키패드) */
+    .control-panel {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      box-shadow: var(--shadow);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    /* 지갑 모드 */
+    .wallet-grid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(6px, 1.8vw, 12px);
+      padding: 2px 0;
+    }
+
+    .wallet-hint {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 700;
+      margin-top: -2px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      border: none;
+      border-radius: 12px;
+      height: clamp(40px, 6.2vh, 50px);
+      font-size: clamp(14px, 3.6vw, 18px);
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s;
+    }
+    .btn-action:active { transform: scale(0.97); }
+
+    .btn-clear {
+      flex: 1;
+      background: #f1f3f5;
+      color: #495057;
+    }
+
+    .btn-submit {
+      flex: 2.2;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 3px 0 var(--primary-dark);
+    }
+
+    .btn-next-main {
+      flex: 2.2;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 3px 0 var(--accent-dark);
+    }
+
+    /* 키패드 모드 (돈 세기) */
+    .keypad-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      padding: 6px 12px;
+      height: clamp(40px, 6vh, 48px);
+    }
+
+    .keypad-label {
+      font-size: clamp(12px, 2.8vw, 14px);
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .keypad-value {
+      font-size: clamp(20px, 5vw, 28px);
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: 0.5px;
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .key-btn {
+      border: none;
+      border-radius: 11px;
+      height: clamp(38px, 5.8vh, 48px);
+      background: #f4f6f8;
+      color: var(--text);
+      font-size: clamp(16px, 4vw, 22px);
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 2px 0 #d5dbe1;
+      transition: transform 0.08s;
+    }
+
+    .key-btn:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+
+    .key-btn.fn {
+      background: #ffe8cc;
+      color: #b55d00;
+      box-shadow: 0 2px 0 #f5c284;
+      font-size: clamp(14px, 3.4vw, 18px);
+    }
+
+    .key-btn.ok {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 0 var(--primary-dark);
+      font-size: clamp(14px, 3.5vw, 18px);
+      grid-row: span 2;
+      height: auto;
+    }
+
+    .key-btn.next {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 0 var(--accent-dark);
+    }
+
+    /* 가로 화면 (낮은 높이: 스마트폰 가로 / 태블릿 가로 최적화) */
+    @media (orientation: landscape) and (max-height: 580px) {
+      #app { gap: 4px; padding-top: 4px; padding-bottom: 4px; }
+      .workspace { flex-direction: row; align-items: stretch; }
+      .stage-panel { flex: 1.2; }
+      .control-panel {
+        flex: 0.95;
+        justify-content: space-between;
+        overflow: hidden;
+      }
+      .wallet-grid { flex: 1; align-content: center; }
+      .prompt-card { padding: 6px 10px; }
+      .item-emoji { font-size: 30px; }
+      .key-btn { height: 34px; font-size: 16px; }
+    }
+
+    /* iOS 설치 안내 모달 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+      padding: 16px;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      max-width: 340px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+    }
+    .modal-box h3 { margin: 0 0 10px; font-size: 18px; }
+    .modal-box p { margin: 0 0 16px; font-size: 14px; line-height: 1.5; color: #495057; }
+    .modal-close {
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* 폭죽 캔버스 */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confettiCanvas"></canvas>
+
+  <div id="app">
+    <!-- 헤더 -->
+    <header class="header">
+      <div class="brand">
+        <img src="./icon.png" alt="아이콘" onerror="this.style.display='none'" />
+        <span class="brand-title">어린이 화폐 놀이</span>
+      </div>
+      <div class="header-actions">
+        <div class="score-pill" id="scorePill">⭐ <span id="scoreVal">0</span></div>
+        <button class="icon-btn" id="hintBtn" title="합계 힌트">💡 힌트</button>
+        <button class="icon-btn" id="soundBtn" title="소리 켜기/끄기">🔊</button>
+        <button class="icon-btn install-btn" id="installBtn">📲 설치</button>
+      </div>
+    </header>
+
+    <!-- 모드 및 난이도 -->
+    <nav class="toolbar">
+      <div class="seg-group modes" id="modeGroup">
+        <button class="seg-btn" data-mode="pay">🛒 돈 내기</button>
+        <button class="seg-btn" data-mode="count">🪙 돈 세기</button>
+        <button class="seg-btn" data-mode="change">💵 거스름돈</button>
+      </div>
+      <div class="seg-group levels" id="levelGroup">
+        <button class="seg-btn" data-level="1">초급</button>
+        <button class="seg-btn" data-level="2">중급</button>
+        <button class="seg-btn" data-level="3">고급</button>
+      </div>
+    </nav>
+
+    <!-- 메인 작업 영역 -->
+    <main class="workspace">
+      <!-- 문제 & 돈 쟁반 -->
+      <section class="stage-panel">
+        <div class="prompt-card">
+          <div class="item-box">
+            <div class="item-emoji" id="itemEmoji">🍓</div>
+            <div class="item-info">
+              <span class="prompt-label" id="promptLabel">물건값만큼 돈을 내주세요!</span>
+              <span class="item-name" id="itemName">딸기 아이스크림</span>
+            </div>
+          </div>
+          <div class="price-area" id="priceArea">
+            <div class="price-tag" id="priceTag">700원</div>
+            <div class="paid-tag" id="paidTag" style="display:none;">손님이 낸 돈: 1,000원</div>
+          </div>
+        </div>
+
+        <div class="tray-card">
+          <div class="tray-header">
+            <span class="tray-title" id="trayTitle">💰 계산대 쟁반 (터치하면 빠집니다)</span>
+            <span class="tray-sum" id="traySum">합계: 0원</span>
+          </div>
+          <div class="tray-items" id="trayItems"></div>
+
+          <div class="feedback-bar" id="feedbackBar">
+            <span id="feedbackText">정답이에요!</span>
+            <button class="next-btn-inline" id="nextBtnInline" style="display:none;">다음 문제 ▶</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 하단 입력 영역 (지갑 / 키패드 전환) -->
+      <section class="control-panel" id="walletPanel">
+        <div class="wallet-grid" id="walletGrid"></div>
+        <div class="wallet-hint" id="walletHint">아래 지갑에서 동전이나 지폐를 눌러 올려주세요</div>
+        <div class="action-row">
+          <button class="btn-action btn-clear" id="clearTrayBtn">🗑️ 비우기</button>
+          <button class="btn-action btn-submit" id="checkTrayBtn">✅ 계산하기</button>
+        </div>
+      </section>
+
+      <section class="control-panel" id="keypadPanel" style="display:none;">
+        <div class="keypad-display">
+          <span class="keypad-label">내가 적은 금액</span>
+          <span class="keypad-value"><span id="keypadText">0</span>원</span>
+        </div>
+        <div class="keypad-grid">
+          <button class="key-btn" data-key="1">1</button>
+          <button class="key-btn" data-key="2">2</button>
+          <button class="key-btn" data-key="3">3</button>
+          <button class="key-btn fn" data-key="back">⌫</button>
+
+          <button class="key-btn" data-key="4">4</button>
+          <button class="key-btn" data-key="5">5</button>
+          <button class="key-btn" data-key="6">6</button>
+          <button class="key-btn fn" data-key="clear">지움</button>
+
+          <button class="key-btn" data-key="7">7</button>
+          <button class="key-btn" data-key="8">8</button>
+          <button class="key-btn" data-key="9">9</button>
+          <button class="key-btn ok" id="keypadSubmitBtn" data-key="submit">확인</button>
+
+          <button class="key-btn" data-key="0">0</button>
+          <button class="key-btn" data-key="00">00</button>
+          <button class="key-btn" data-key="000">000</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- iOS 앱 설치 안내 모달 -->
+  <div class="modal-backdrop" id="iosModal">
+    <div class="modal-box">
+      <h3>📲 홈 화면에 앱으로 추가하기</h3>
+      <p>
+        사파리(Safari) 하단의 <strong>공유 버튼(□↑)</strong>을 누른 뒤<br />
+        <strong>'홈 화면에 추가'</strong>를 선택하면<br />
+        앱처럼 전체 화면으로 이용할 수 있어요!
+      </p>
+      <button class="modal-close" id="closeIosModal">알겠어요</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      // === 설정 및 상태 저장 ===
+      const STORAGE_KEY = 'kids_money_game_state_v1';
+      const defaultState = {
+        mode: 'pay',   // 'pay' | 'count' | 'change'
+        level: 1,      // 1 | 2 | 3
+        soundOn: true,
+        hintOn: true,
+        score: 0
+      };
+
+      let state = { ...defaultState };
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved && typeof saved === 'object') {
+          state = { ...defaultState, ...saved };
+        }
+      } catch (e) {}
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {}
+      }
+
+      // === 난이도별 화폐 구성 ===
+      const LEVEL_DENOMS = {
+        1: [100, 500, 1000],
+        2: [10, 50, 100, 500, 1000],
+        3: [100, 500, 1000, 5000, 10000]
+      };
+
+      // === 가게 물건 목록 ===
+      const SHOP_ITEMS = [
+        { emoji: '🍬', name: '달콤 사탕' },
+        { emoji: '🍦', name: '딸기 아이스크림' },
+        { emoji: '🍩', name: '초코 도넛' },
+        { emoji: '🍎', name: '빨간 사과' },
+        { emoji: '🧃', name: '오렌지 주스' },
+        { emoji: '🧁', name: '생크림 컵케이크' },
+        { emoji: '🍪', name: '초코칩 쿠키' },
+        { emoji: '🖍️', name: '알록달록 크레파스' },
+        { emoji: '🚗', name: '장난감 자동차' },
+        { emoji: '🧸', name: '귀여운 곰인형' },
+        { emoji: '🎈', name: '하늘 풍선' },
+        { emoji: '🍕', name: '치즈 피자' },
+        { emoji: '🥪', name: '계란 샌드위치' },
+        { emoji: '📚', name: '재미있는 동화책' },
+        { emoji: '🦖', name: '공룡 피규어' },
+        { emoji: '⚽', name: '축구공' }
+      ];
+
+      // === 현재 문제 상태 ===
+      let currentProblem = null; // { item, price, paid, target, countCoins }
+      let trayCoins = [];
+      let keypadInput = '';
+      let isSolved = false;
+      const MAX_TRAY_ITEMS = 24;
+
+      // === DOM 참조 ===
+      const scoreVal = document.getElementById('scoreVal');
+      const hintBtn = document.getElementById('hintBtn');
+      const soundBtn = document.getElementById('soundBtn');
+      const installBtn = document.getElementById('installBtn');
+      const modeGroup = document.getElementById('modeGroup');
+      const levelGroup = document.getElementById('levelGroup');
+
+      const itemEmoji = document.getElementById('itemEmoji');
+      const promptLabel = document.getElementById('promptLabel');
+      const itemName = document.getElementById('itemName');
+      const priceArea = document.getElementById('priceArea');
+      const priceTag = document.getElementById('priceTag');
+      const paidTag = document.getElementById('paidTag');
+
+      const trayTitle = document.getElementById('trayTitle');
+      const traySum = document.getElementById('traySum');
+      const trayItems = document.getElementById('trayItems');
+      const feedbackBar = document.getElementById('feedbackBar');
+      const feedbackText = document.getElementById('feedbackText');
+      const nextBtnInline = document.getElementById('nextBtnInline');
+
+      const walletPanel = document.getElementById('walletPanel');
+      const walletGrid = document.getElementById('walletGrid');
+      const walletHint = document.getElementById('walletHint');
+      const clearTrayBtn = document.getElementById('clearTrayBtn');
+      const checkTrayBtn = document.getElementById('checkTrayBtn');
+
+      const keypadPanel = document.getElementById('keypadPanel');
+      const keypadText = document.getElementById('keypadText');
+      const keypadSubmitBtn = document.getElementById('keypadSubmitBtn');
+
+      const iosModal = document.getElementById('iosModal');
+      const closeIosModal = document.getElementById('closeIosModal');
+
+      // === Web Audio 효과음 ===
+      let audioCtx = null;
+      function getAudioCtx() {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      function playSound(type) {
+        if (!state.soundOn) return;
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+
+        const now = ctx.currentTime;
+        if (type === 'coin') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1400, now);
+          osc.frequency.exponentialRampToValueAtTime(2200, now + 0.08);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'bill') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(340, now);
+          osc.frequency.exponentialRampToValueAtTime(520, now + 0.07);
+          gain.gain.setValueAtTime(0.13, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.11);
+        } else if (type === 'pop') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(320, now + 0.07);
+          gain.gain.setValueAtTime(0.11, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.09);
+        } else if (type === 'success') {
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            const t = now + i * 0.085;
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.16, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.23);
+          });
+        } else if (type === 'wrong') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(240, now);
+          osc.frequency.linearRampToValueAtTime(180, now + 0.18);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.23);
+        }
+      }
+
+      // === 폭죽 애니메이션 ===
+      const confettiCanvas = document.getElementById('confettiCanvas');
+      const cCtx = confettiCanvas.getContext('2d');
+      let confettiParticles = [];
+      let confettiAnimId = null;
+
+      function resizeCanvas() {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      function launchConfetti() {
+        const colors = ['#ff9f1c', '#2ec4b6', '#ff595e', '#ffca3a', '#1982c4', '#8ac926'];
+        confettiParticles = [];
+        for (let i = 0; i < 65; i++) {
+          confettiParticles.push({
+            x: window.innerWidth * (0.2 + Math.random() * 0.6),
+            y: window.innerHeight * 0.35,
+            vx: (Math.random() - 0.5) * 10,
+            vy: -Math.random() * 10 - 3,
+            size: Math.random() * 7 + 5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rot: Math.random() * 360,
+            vrot: (Math.random() - 0.5) * 14,
+            life: 70 + Math.random() * 30
+          });
+        }
+        if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+        animateConfetti();
+      }
+
+      function animateConfetti() {
+        cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        confettiParticles = confettiParticles.filter(p => p.life > 0);
+        for (const p of confettiParticles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.32;
+          p.rot += p.vrot;
+          p.life -= 1;
+          cCtx.save();
+          cCtx.translate(p.x, p.y);
+          cCtx.rotate((p.rot * Math.PI) / 180);
+          cCtx.fillStyle = p.color;
+          cCtx.globalAlpha = Math.min(1, p.life / 25);
+          cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          cCtx.restore();
+        }
+        if (confettiParticles.length > 0) {
+          confettiAnimId = requestAnimationFrame(animateConfetti);
+        } else {
+          cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
+      }
+
+      // === 유틸리티 ===
+      function fmt(num) {
+        return Number(num).toLocaleString('ko-KR');
+      }
+
+      function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function pickRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function createMoneyElement(value, interactive = true, pop = false) {
+        const btn = document.createElement(interactive ? 'button' : 'div');
+        const isBill = value >= 1000;
+        btn.className = `money-piece ${isBill ? 'bill' : 'coin'} m-${value}${pop ? ' pop' : ''}`;
+        if (interactive) btn.type = 'button';
+        btn.dataset.val = value;
+        btn.innerHTML = `<span>${fmt(value)}</span><span class="unit">원</span>`;
+        return btn;
+      }
+
+      // === 문제 생성 ===
+      function generateProblem() {
+        isSolved = false;
+        trayCoins = [];
+        keypadInput = '';
+        hideFeedback();
+
+        const item = pickRandom(SHOP_ITEMS);
+        const lv = state.level;
+
+        if (state.mode === 'pay') {
+          let price = 0;
+          if (lv === 1) {
+            price = randInt(2, 18) * 100; // 200 ~ 1,800원
+          } else if (lv === 2) {
+            price = randInt(12, 260) * 10; // 120 ~ 2,600원
+            // 10원 단위가 너무 자주 0이 되지 않게 자연스럽게 유지
+            if (Math.random() < 0.7 && price % 100 === 0) price += pickRandom([10, 20, 30, 50, 60, 80]);
+          } else {
+            price = randInt(12, 165) * 100; // 1,200 ~ 16,500원
+          }
+          currentProblem = { item, price, paid: 0, target: price, countCoins: [] };
+        } else if (state.mode === 'change') {
+          let price = 0;
+          let paid = 0;
+          if (lv === 1) {
+            const paidChoices = [500, 1000, 1500, 2000];
+            paid = pickRandom(paidChoices);
+            const maxStep = Math.floor((paid - 100) / 100);
+            price = randInt(1, maxStep) * 100;
+          } else if (lv === 2) {
+            const paidChoices = [500, 1000, 1500, 2000, 3000];
+            paid = pickRandom(paidChoices);
+            const minPrice = Math.max(100, paid - 1500);
+            const stepMin = Math.ceil(minPrice / 10);
+            const stepMax = Math.floor((paid - 20) / 10);
+            price = randInt(stepMin, stepMax) * 10;
+          } else {
+            const paidChoices = [5000, 10000, 15000, 20000];
+            paid = pickRandom(paidChoices);
+            const minPrice = Math.max(1000, paid - 8500);
+            const stepMin = Math.ceil(minPrice / 100);
+            const stepMax = Math.floor((paid - 200) / 100);
+            price = randInt(stepMin, stepMax) * 100;
+          }
+          currentProblem = { item, price, paid, target: paid - price, countCoins: [] };
+        } else {
+          // 'count' 모드: 3~9개의 동전/지폐 조합 생성
+          const denoms = LEVEL_DENOMS[lv];
+          const count = randInt(3, lv === 2 ? 8 : 7);
+          const coins = [];
+          for (let i = 0; i < count; i++) {
+            coins.push(pickRandom(denoms));
+          }
+          coins.sort((a, b) => b - a);
+          const total = coins.reduce((s, v) => s + v, 0);
+          currentProblem = { item: { emoji: '🐷', name: '저금통에 모인 돈' }, price: 0, paid: 0, target: total, countCoins: coins };
+        }
+
+        renderUI();
+      }
+
+      // === 화면 렌더링 ===
+      function renderUI() {
+        // 헤더 및 버튼 상태
+        scoreVal.textContent = state.score;
+        hintBtn.classList.toggle('active', state.hintOn);
+        hintBtn.textContent = state.hintOn ? '💡 힌트 ON' : '💡 힌트 OFF';
+        soundBtn.textContent = state.soundOn ? '🔊' : '🔇';
+
+        modeGroup.querySelectorAll('.seg-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.mode === state.mode);
+        });
+        levelGroup.querySelectorAll('.seg-btn').forEach(btn => {
+          btn.classList.toggle('active', Number(btn.dataset.level) === state.level);
+        });
+
+        // 문제 카드 렌더링
+        const p = currentProblem;
+        itemEmoji.textContent = p.item.emoji;
+        itemName.textContent = p.item.name;
+
+        if (state.mode === 'pay') {
+          promptLabel.textContent = '물건값만큼 돈을 내주세요!';
+          priceArea.style.display = 'flex';
+          priceTag.textContent = `${fmt(p.price)}원`;
+          paidTag.style.display = 'none';
+          trayTitle.textContent = '💰 계산대 쟁반 (누르면 빠집니다)';
+          walletPanel.style.display = 'flex';
+          keypadPanel.style.display = 'none';
+          walletHint.textContent = '아래 지갑에서 동전이나 지폐를 눌러 올려주세요';
+          renderWallet();
+        } else if (state.mode === 'change') {
+          promptLabel.textContent = '손님에게 거스름돈을 주세요!';
+          priceArea.style.display = 'flex';
+          priceTag.textContent = `가격 ${fmt(p.price)}원`;
+          paidTag.style.display = 'block';
+          paidTag.textContent = `낸 돈 ${fmt(p.paid)}원`;
+          trayTitle.textContent = '🤲 거스름돈 쟁반 (누르면 빠집니다)';
+          walletPanel.style.display = 'flex';
+          keypadPanel.style.display = 'none';
+          walletHint.textContent = '거슬러 줄 돈을 눌러 쟁반에 올려주세요';
+          renderWallet();
+        } else {
+          promptLabel.textContent = '쟁반 위에 돈이 모두 얼마일까요?';
+          priceArea.style.display = 'none';
+          trayTitle.textContent = '🪙 동전과 지폐를 세어보세요!';
+          walletPanel.style.display = 'none';
+          keypadPanel.style.display = 'flex';
+          renderKeypadDisplay();
+        }
+
+        renderTray();
+        updateActionButtons();
+      }
+
+      function renderWallet() {
+        walletGrid.innerHTML = '';
+        const denoms = LEVEL_DENOMS[state.level];
+        denoms.forEach(val => {
+          const el = createMoneyElement(val, true, false);
+          el.addEventListener('click', () => addCoinToTray(val));
+          walletGrid.appendChild(el);
+        });
+      }
+
+      function renderTray(newestIndex = -1) {
+        trayItems.innerHTML = '';
+        const list = state.mode === 'count' ? currentProblem.countCoins : trayCoins;
+
+        trayItems.classList.remove('compact', 'super-compact');
+        if (list.length >= 15) {
+          trayItems.classList.add('super-compact');
+        } else if (list.length >= 9) {
+          trayItems.classList.add('compact');
+        }
+
+        if (list.length === 0) {
+          trayItems.innerHTML = `<div class="tray-empty">쟁반이 비어 있어요.<br/>아래에서 돈을 눌러 올려보세요!</div>`;
+        } else {
+          list.forEach((val, idx) => {
+            const interactive = state.mode !== 'count';
+            const el = createMoneyElement(val, interactive, idx === newestIndex);
+            if (interactive) {
+              el.addEventListener('click', () => removeCoinFromTray(idx));
+            }
+            trayItems.appendChild(el);
+          });
+        }
+
+        // 쟁반 상단 합계 / 힌트 표시
+        if (state.mode === 'count') {
+          if (isSolved) {
+            traySum.textContent = `정답: ${fmt(currentProblem.target)}원`;
+            traySum.classList.add('highlight');
+          } else if (state.hintOn) {
+            // 힌트 ON이면 화폐별 개수 묶음 안내
+            const counts = {};
+            list.forEach(v => counts[v] = (counts[v] || 0) + 1);
+            const summary = Object.keys(counts)
+              .map(Number)
+              .sort((a, b) => b - a)
+              .map(v => `${fmt(v)}×${counts[v]}`)
+              .join('  ');
+            traySum.textContent = summary;
+            traySum.classList.remove('highlight');
+          } else {
+            traySum.textContent = `모두 ${list.length}개`;
+            traySum.classList.remove('highlight');
+          }
+        } else {
+          const sum = trayCoins.reduce((a, b) => a + b, 0);
+          if (state.hintOn || isSolved) {
+            traySum.textContent = `낸 돈: ${fmt(sum)}원`;
+          } else {
+            traySum.textContent = `낸 돈: ???원`;
+          }
+          traySum.classList.toggle('highlight', isSolved);
+        }
+      }
+
+      function renderKeypadDisplay() {
+        const num = keypadInput === '' ? 0 : parseInt(keypadInput, 10);
+        keypadText.textContent = fmt(num);
+      }
+
+      function updateActionButtons() {
+        if (isSolved) {
+          checkTrayBtn.textContent = '다음 문제 ▶';
+          checkTrayBtn.className = 'btn-action btn-next-main';
+          keypadSubmitBtn.textContent = '다음 ▶';
+          keypadSubmitBtn.classList.add('next');
+        } else {
+          checkTrayBtn.textContent = state.mode === 'change' ? '✅ 거슬러 주기' : '✅ 계산하기';
+          checkTrayBtn.className = 'btn-action btn-submit';
+          keypadSubmitBtn.textContent = '확인';
+          keypadSubmitBtn.classList.remove('next');
+        }
+      }
+
+      // === 피드백 표시 ===
+      let feedbackTimer = null;
+      function showFeedback(type, text, showNext = false) {
+        if (feedbackTimer) clearTimeout(feedbackTimer);
+        feedbackBar.className = `feedback-bar show ${type}`;
+        feedbackText.textContent = text;
+        nextBtnInline.style.display = showNext ? 'inline-block' : 'none';
+
+        if (!showNext) {
+          feedbackTimer = setTimeout(() => {
+            if (!isSolved) hideFeedback();
+          }, 2200);
+        }
+      }
+
+      function hideFeedback() {
+        if (feedbackTimer) clearTimeout(feedbackTimer);
+        feedbackBar.className = 'feedback-bar';
+        nextBtnInline.style.display = 'none';
+      }
+
+      // === 인터랙션 로직 ===
+      function addCoinToTray(val) {
+        if (isSolved) return;
+        if (trayCoins.length >= MAX_TRAY_ITEMS) {
+          playSound('wrong');
+          showFeedback('warn', '쟁반이 가득 찼어요! 더 큰 돈을 써볼까요?');
+          return;
+        }
+        trayCoins.push(val);
+        trayCoins.sort((a, b) => b - a);
+        const addedIdx = trayCoins.indexOf(val);
+        playSound(val >= 1000 ? 'bill' : 'coin');
+        hideFeedback();
+        renderTray(addedIdx);
+      }
+
+      function removeCoinFromTray(idx) {
+        if (isSolved) return;
+        trayCoins.splice(idx, 1);
+        playSound('pop');
+        hideFeedback();
+        renderTray();
+      }
+
+      function checkTrayAnswer() {
+        if (isSolved) {
+          generateProblem();
+          return;
+        }
+        const sum = trayCoins.reduce((a, b) => a + b, 0);
+        const target = currentProblem.target;
+
+        if (sum === target) {
+          handleCorrect();
+        } else if (sum === 0) {
+          playSound('wrong');
+          showFeedback('warn', '먼저 돈을 쟁반에 올려주세요!');
+        } else if (sum < target) {
+          playSound('wrong');
+          const diff = target - sum;
+          const msg = state.hintOn
+            ? `조금 부족해요! (${fmt(diff)}원 더 필요해요)`
+            : '조금 부족해요! 돈을 더 올려볼까요?';
+          showFeedback('warn', msg);
+        } else {
+          playSound('wrong');
+          const diff = sum - target;
+          const msg = state.hintOn
+            ? `조금 많아요! (${fmt(diff)}원 빼볼까요?)`
+            : '조금 많이 냈어요! 돈을 눌러서 빼볼까요?';
+          showFeedback('err', msg);
+        }
+      }
+
+      function checkKeypadAnswer() {
+        if (isSolved) {
+          generateProblem();
+          return;
+        }
+        if (keypadInput === '') {
+          playSound('wrong');
+          showFeedback('warn', '숫자 버튼을 눌러 금액을 적어주세요!');
+          return;
+        }
+        const ans = parseInt(keypadInput, 10);
+        const target = currentProblem.target;
+        if (ans === target) {
+          handleCorrect();
+        } else if (ans < target) {
+          playSound('wrong');
+          showFeedback('warn', '실제 금액보다 조금 작아요! 다시 세어볼까요?');
+        } else {
+          playSound('wrong');
+          showFeedback('err', '실제 금액보다 조금 커요! 다시 세어볼까요?');
+        }
+      }
+
+      function handleCorrect() {
+        isSolved = true;
+        state.score += 1;
+        saveState();
+        scoreVal.textContent = state.score;
+        playSound('success');
+        launchConfetti();
+
+        const cheers = [
+          '정답이에요! 참 잘했어요! 🎉',
+          '딩동댕! 계산 박사님이네요! 🌟',
+          '완벽해요! 최고예요! 👏',
+          '멋져요! 정확하게 맞혔어요! 🏆'
+        ];
+        showFeedback('ok', pickRandom(cheers), true);
+        renderTray();
+        updateActionButtons();
+      }
+
+      // === 이벤트 바인딩 ===
+      modeGroup.addEventListener('click', e => {
+        const btn = e.target.closest('.seg-btn');
+        if (!btn) return;
+        const nextMode = btn.dataset.mode;
+        if (nextMode !== state.mode) {
+          state.mode = nextMode;
+          saveState();
+          playSound('pop');
+          generateProblem();
+        }
+      });
+
+      levelGroup.addEventListener('click', e => {
+        const btn = e.target.closest('.seg-btn');
+        if (!btn) return;
+        const nextLv = Number(btn.dataset.level);
+        if (nextLv !== state.level) {
+          state.level = nextLv;
+          saveState();
+          playSound('pop');
+          generateProblem();
+        }
+      });
+
+      hintBtn.addEventListener('click', () => {
+        state.hintOn = !state.hintOn;
+        saveState();
+        playSound('pop');
+        renderUI();
+      });
+
+      soundBtn.addEventListener('click', () => {
+        state.soundOn = !state.soundOn;
+        saveState();
+        if (state.soundOn) playSound('pop');
+        soundBtn.textContent = state.soundOn ? '🔊' : '🔇';
+      });
+
+      clearTrayBtn.addEventListener('click', () => {
+        if (isSolved || trayCoins.length === 0) return;
+        trayCoins = [];
+        playSound('pop');
+        hideFeedback();
+        renderTray();
+      });
+
+      checkTrayBtn.addEventListener('click', checkTrayAnswer);
+      nextBtnInline.addEventListener('click', () => {
+        playSound('pop');
+        generateProblem();
+      });
+
+      keypadPanel.addEventListener('click', e => {
+        const btn = e.target.closest('.key-btn');
+        if (!btn) return;
+        const key = btn.dataset.key;
+
+        if (key === 'submit') {
+          checkKeypadAnswer();
+          return;
+        }
+        if (isSolved) return;
+
+        playSound('pop');
+        hideFeedback();
+
+        if (key === 'clear') {
+          keypadInput = '';
+        } else if (key === 'back') {
+          keypadInput = keypadInput.slice(0, -1);
+        } else {
+          if (keypadInput === '0') keypadInput = '';
+          const next = keypadInput + key;
+          if (next.length <= 6) {
+            keypadInput = next.replace(/^0+(?=\d)/, '');
+          }
+        }
+        renderKeypadDisplay();
+      });
+
+      // === PWA 설치 & 서비스 워커 등록 ===
+      let deferredPrompt = null;
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+      if (!isStandalone && isIOS) {
+        installBtn.style.display = 'inline-flex';
+      }
+
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!isStandalone) {
+          installBtn.style.display = 'inline-flex';
+        }
+      });
+
+      installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            installBtn.style.display = 'none';
+          }
+          deferredPrompt = null;
+        } else if (isIOS) {
+          iosModal.classList.add('show');
+        }
+      });
+
+      window.addEventListener('appinstalled', () => {
+        installBtn.style.display = 'none';
+        deferredPrompt = null;
+      });
+
+      closeIosModal.addEventListener('click', () => iosModal.classList.remove('show'));
+      iosModal.addEventListener('click', e => {
+        if (e.target === iosModal) iosModal.classList.remove('show');
+      });
+
+      // 서비스 워커 등록 (네트워크 우선 전략으로 코드 수정 시 즉시 반영)
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+            .then(reg => {
+              reg.update();
+            })
+            .catch(() => {});
+        });
+      }
+
+      // 앱 시작
+      generateProblem();
+    })();
+  </script>
+</body>
+</html>

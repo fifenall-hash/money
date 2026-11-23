@@ -1,0 +1,26 @@
+{
+  "name": "어린이 화폐 계산 놀이",
+  "short_name": "화폐놀이",
+  "description": "어린이를 위한 한국 화폐 돈 내기, 돈 세기, 거스름돈 계산 놀이 앱",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff8ec",
+  "theme_color": "#ff9f1c",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
