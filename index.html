@@ -9,7 +9,6 @@
   <meta name="apple-mobile-web-app-title" content="화폐놀이" />
   <title>어린이 화폐 계산 놀이</title>
 
-  <!-- 아이콘 및 PWA 매니페스트 -->
   <link rel="icon" href="./icon.ico" sizes="any" />
   <link rel="icon" type="image/png" href="./icon.png" />
   <link rel="apple-touch-icon" href="./icon.png" />
@@ -28,7 +27,12 @@
       --muted: #6c757d;
       --border: #f1e3cc;
       --shadow: 0 4px 14px rgba(43, 45, 66, 0.08);
-      --radius: 16px;
+      --radius: 15px;
+
+      /* 실제 한국 화폐 mm 기준 스케일 (동전 18~26.5mm, 지폐 136~154 x 68mm) */
+      --tray-mm: clamp(0.86px, 0.24vw, 1.24px);
+      --wallet-mm: clamp(0.76px, 0.215vw, 1.06px);
+      --paid-mm: clamp(0.62px, 0.165vw, 0.90px);
     }
 
     * {
@@ -53,14 +57,14 @@
 
     #app {
       width: 100%;
-      max-width: 820px;
+      max-width: 860px;
       height: 100%;
       height: 100dvh;
       margin: 0 auto;
-      padding: calc(env(safe-area-inset-top, 0px) + 6px)
-               calc(env(safe-area-inset-right, 0px) + 10px)
-               calc(env(safe-area-inset-bottom, 0px) + 8px)
-               calc(env(safe-area-inset-left, 0px) + 10px);
+      padding: calc(env(safe-area-inset-top, 0px) + 5px)
+               calc(env(safe-area-inset-right, 0px) + 9px)
+               calc(env(safe-area-inset-bottom, 0px) + 7px)
+               calc(env(safe-area-inset-left, 0px) + 9px);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -84,16 +88,16 @@
     }
 
     .brand img {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
       object-fit: cover;
       flex-shrink: 0;
     }
 
     .brand-title {
-      font-size: clamp(15px, 3.6vw, 20px);
-      font-weight: 800;
+      font-size: clamp(14px, 3.5vw, 19px);
+      font-weight: 900;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -111,23 +115,23 @@
       border: 1.5px solid #ffd180;
       color: #b55d00;
       border-radius: 999px;
-      padding: 4px 10px;
-      font-size: clamp(12px, 2.8vw, 14px);
+      padding: 3px 9px;
+      font-size: clamp(12px, 2.7vw, 14px);
       font-weight: 800;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
 
     .icon-btn {
       border: 1.5px solid var(--border);
       background: var(--card);
       color: var(--text);
-      border-radius: 10px;
-      height: 32px;
-      padding: 0 9px;
-      font-size: 13px;
-      font-weight: 700;
+      border-radius: 9px;
+      height: 30px;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -157,18 +161,17 @@
       justify-content: space-between;
       gap: 6px;
       flex-shrink: 0;
-      flex-wrap: nowrap;
     }
 
     .seg-group {
       display: flex;
       background: #f3e8d2;
       padding: 3px;
-      border-radius: 12px;
+      border-radius: 11px;
       gap: 3px;
     }
 
-    .seg-group.modes { flex: 1.45; }
+    .seg-group.modes { flex: 1.5; }
     .seg-group.levels { flex: 1; }
 
     .seg-btn {
@@ -176,10 +179,10 @@
       border: none;
       background: transparent;
       color: #6b5b45;
-      font-size: clamp(11px, 2.9vw, 14px);
+      font-size: clamp(11px, 2.8vw, 14px);
       font-weight: 800;
-      padding: 6px 4px;
-      border-radius: 9px;
+      padding: 5px 3px;
+      border-radius: 8px;
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.15s;
@@ -188,7 +191,7 @@
     .seg-btn.active {
       background: #ffffff;
       color: var(--text);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     }
 
     /* 메인 작업 영역 */
@@ -197,17 +200,16 @@
       min-height: 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
       overflow: hidden;
     }
 
-    /* 상단 문제 + 쟁반 영역 */
     .stage-panel {
       flex: 1;
       min-height: 0;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 6px;
       overflow: hidden;
     }
 
@@ -216,77 +218,136 @@
       background: var(--card);
       border: 2px solid var(--border);
       border-radius: var(--radius);
-      padding: clamp(8px, 1.8vh, 14px) 12px;
+      padding: 8px 11px;
       box-shadow: var(--shadow);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
       flex-shrink: 0;
+      min-height: 76px;
     }
 
-    .item-box {
+    /* 물건 + 바로 아래 가격표 */
+    .product-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      flex-shrink: 0;
+      min-width: 106px;
+    }
+
+    .product-top {
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-width: 0;
+      gap: 6px;
     }
 
     .item-emoji {
-      font-size: clamp(32px, 6.5vh, 52px);
+      font-size: clamp(28px, 5.2vh, 44px);
       line-height: 1;
-      flex-shrink: 0;
-      filter: drop-shadow(0 3px 4px rgba(0,0,0,0.1));
-    }
-
-    .item-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .prompt-label {
-      font-size: clamp(11px, 2.5vw, 13px);
-      font-weight: 700;
-      color: var(--muted);
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.12));
     }
 
     .item-name {
-      font-size: clamp(15px, 3.8vw, 21px);
+      font-size: clamp(13px, 3.2vw, 17px);
       font-weight: 900;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
-    .price-area {
+    /* 가격표 태그 디자인 */
+    .price-tag {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(180deg, #fff9db, #ffe066);
+      border: 1.8px solid #f08c00;
+      color: #8a3f00;
+      border-radius: 8px;
+      padding: 2px 10px 2px 14px;
+      font-size: clamp(15px, 3.8vw, 21px);
+      font-weight: 900;
+      letter-spacing: -0.3px;
+      box-shadow: 0 2px 4px rgba(240, 140, 0, 0.18);
+    }
+
+    .price-tag::before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1.4px solid #f08c00;
+    }
+
+    /* 문제 설명 / 손님이 낸 돈 영역 */
+    .prompt-right {
+      flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 3px;
-      flex-shrink: 0;
+      justify-content: center;
+      gap: 4px;
     }
 
-    .price-tag {
-      background: #fff3cd;
-      border: 2px solid #ffca2c;
-      color: #995400;
-      border-radius: 12px;
-      padding: 4px 11px;
-      font-size: clamp(17px, 4.4vw, 26px);
-      font-weight: 900;
-      letter-spacing: -0.3px;
-    }
-
-    .paid-tag {
-      background: #e7f5ff;
-      border: 1.5px solid #74c0fc;
-      color: #1864ab;
-      border-radius: 8px;
-      padding: 2px 8px;
-      font-size: clamp(12px, 2.8vw, 14px);
+    .prompt-msg {
+      font-size: clamp(12px, 3vw, 15px);
       font-weight: 800;
+      color: #495057;
+      text-align: right;
+      line-height: 1.3;
+    }
+
+    .rule-badge {
+      display: none;
+      background: #fff0f6;
+      border: 1px solid #faa2c1;
+      color: #c2255c;
+      font-size: clamp(10px, 2.5vw, 12px);
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-align: right;
+    }
+    .rule-badge.show { display: inline-block; }
+
+    /* 거스름돈 모드: 손님이 낸 돈 이미지 박스 */
+    .paid-box {
+      display: none;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      background: #f1f8ff;
+      border: 1.5px solid #a5d8ff;
+      border-radius: 11px;
+      padding: 5px 8px;
+      max-width: 100%;
+    }
+    .paid-box.show { display: flex; }
+
+    .paid-header {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: clamp(10px, 2.5vw, 12px);
+      font-weight: 800;
+      color: #1864ab;
+    }
+
+    .paid-visual {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
     }
 
     /* 돈 쟁반 (계산대) */
@@ -296,7 +357,7 @@
       background: #fffdf8;
       border: 2.5px dashed #e2cda8;
       border-radius: var(--radius);
-      padding: 8px 10px;
+      padding: 7px 9px;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -307,24 +368,29 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 6px;
+      gap: 6px;
+      margin-bottom: 4px;
       flex-shrink: 0;
     }
 
     .tray-title {
-      font-size: clamp(12px, 2.8vw, 14px);
+      font-size: clamp(11px, 2.7vw, 13px);
       font-weight: 800;
       color: #8c6d46;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .tray-sum {
       background: #edf2f4;
       color: var(--text);
-      padding: 3px 10px;
+      padding: 2px 9px;
       border-radius: 999px;
-      font-size: clamp(12px, 3vw, 15px);
+      font-size: clamp(11px, 2.8vw, 14px);
       font-weight: 900;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .tray-sum.highlight {
@@ -337,30 +403,85 @@
       min-height: 0;
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       align-content: center;
       justify-content: center;
-      gap: clamp(5px, 1.3vw, 10px);
+      gap: 7px;
       overflow: hidden;
-      padding: 2px;
+      padding: 4px;
     }
+
+    /* 돈이 많을 때도 실제 크기 비율은 100% 유지하면서 스케일만 일괄 축소 */
+    .tray-items.scale-sm { --tray-mm: clamp(0.72px, 0.20vw, 1.04px); gap: 5px; }
+    .tray-items.scale-xs { --tray-mm: clamp(0.58px, 0.16vw, 0.86px); gap: 4px; }
+    .tray-items.scale-xxs { --tray-mm: clamp(0.48px, 0.135vw, 0.74px); gap: 3px; }
 
     .tray-empty {
       color: #b9a487;
-      font-size: clamp(13px, 3.2vw, 16px);
+      font-size: clamp(13px, 3vw, 15px);
       font-weight: 700;
       text-align: center;
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
-    /* 돈 많을 때 자동 축소 */
-    .tray-items.compact .money-piece {
-      transform: scale(0.84);
-      margin: -3px;
+    /* === 실제 비율 SVG 화폐 공통 스타일 === */
+    .money-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.12s ease;
     }
-    .tray-items.super-compact .money-piece {
-      transform: scale(0.72);
-      margin: -6px;
+
+    /* 작은 동전도 터치하기 쉽도록 최소 32px 투명 터치 영역 확보 */
+    .money-wrap.is-coin::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
     }
+
+    .money-wrap:active { transform: scale(0.92); }
+    .money-wrap.pop { animation: popIn 0.18s cubic-bezier(0.22, 1.25, 0.36, 1); }
+
+    .money-svg {
+      display: block;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.22));
+    }
+
+    /* 쟁반 크기 (실제 mm 비율 100% 준수) */
+    .tray-items .money-svg.d-10    { width: calc(18.0 * var(--tray-mm)); height: calc(18.0 * var(--tray-mm)); }
+    .tray-items .money-svg.d-50    { width: calc(21.6 * var(--tray-mm)); height: calc(21.6 * var(--tray-mm)); }
+    .tray-items .money-svg.d-100   { width: calc(24.0 * var(--tray-mm)); height: calc(24.0 * var(--tray-mm)); }
+    .tray-items .money-svg.d-500   { width: calc(26.5 * var(--tray-mm)); height: calc(26.5 * var(--tray-mm)); }
+    .tray-items .money-svg.d-1000  { width: calc(136 * var(--tray-mm));  height: calc(68 * var(--tray-mm)); }
+    .tray-items .money-svg.d-5000  { width: calc(142 * var(--tray-mm));  height: calc(68 * var(--tray-mm)); }
+    .tray-items .money-svg.d-10000 { width: calc(148 * var(--tray-mm));  height: calc(68 * var(--tray-mm)); }
+    .tray-items .money-svg.d-50000 { width: calc(154 * var(--tray-mm));  height: calc(68 * var(--tray-mm)); }
+
+    /* 손님이 낸 돈 크기 (실제 mm 비율 100% 준수) */
+    .paid-visual .money-svg.d-10    { width: calc(18.0 * var(--paid-mm)); height: calc(18.0 * var(--paid-mm)); }
+    .paid-visual .money-svg.d-50    { width: calc(21.6 * var(--paid-mm)); height: calc(21.6 * var(--paid-mm)); }
+    .paid-visual .money-svg.d-100   { width: calc(24.0 * var(--paid-mm)); height: calc(24.0 * var(--paid-mm)); }
+    .paid-visual .money-svg.d-500   { width: calc(26.5 * var(--paid-mm)); height: calc(26.5 * var(--paid-mm)); }
+    .paid-visual .money-svg.d-1000  { width: calc(136 * var(--paid-mm));  height: calc(68 * var(--paid-mm)); }
+    .paid-visual .money-svg.d-5000  { width: calc(142 * var(--paid-mm));  height: calc(68 * var(--paid-mm)); }
+    .paid-visual .money-svg.d-10000 { width: calc(148 * var(--paid-mm));  height: calc(68 * var(--paid-mm)); }
+    .paid-visual .money-svg.d-50000 { width: calc(154 * var(--paid-mm));  height: calc(68 * var(--paid-mm)); }
+
+    /* 지갑 내 화폐 크기 (실제 mm 비율 100% 준수) */
+    .wallet-area .money-svg.d-10    { width: calc(18.0 * var(--wallet-mm)); height: calc(18.0 * var(--wallet-mm)); }
+    .wallet-area .money-svg.d-50    { width: calc(21.6 * var(--wallet-mm)); height: calc(21.6 * var(--wallet-mm)); }
+    .wallet-area .money-svg.d-100   { width: calc(24.0 * var(--wallet-mm)); height: calc(24.0 * var(--wallet-mm)); }
+    .wallet-area .money-svg.d-500   { width: calc(26.5 * var(--wallet-mm)); height: calc(26.5 * var(--wallet-mm)); }
+    .wallet-area .money-svg.d-1000  { width: calc(136 * var(--wallet-mm));  height: calc(68 * var(--wallet-mm)); }
+    .wallet-area .money-svg.d-5000  { width: calc(142 * var(--wallet-mm));  height: calc(68 * var(--wallet-mm)); }
+    .wallet-area .money-svg.d-10000 { width: calc(148 * var(--wallet-mm));  height: calc(68 * var(--wallet-mm)); }
+    .wallet-area .money-svg.d-50000 { width: calc(154 * var(--wallet-mm));  height: calc(68 * var(--wallet-mm)); }
 
     /* 피드백 오버레이 바 */
     .feedback-bar {
@@ -368,203 +489,148 @@
       left: 8px;
       right: 8px;
       bottom: 8px;
-      border-radius: 12px;
-      padding: 7px 12px;
-      font-size: clamp(13px, 3.2vw, 16px);
+      border-radius: 11px;
+      padding: 7px 11px;
+      font-size: clamp(12px, 3vw, 15px);
       font-weight: 800;
       display: none;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
-      z-index: 5;
-      animation: popIn 0.2s ease-out;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      z-index: 6;
+      animation: popIn 0.18s ease-out;
     }
 
     .feedback-bar.show { display: flex; }
-    .feedback-bar.ok {
-      background: #2ec4b6;
-      color: #fff;
-    }
-    .feedback-bar.warn {
-      background: #ff9f1c;
-      color: #fff;
-    }
-    .feedback-bar.err {
-      background: #ff595e;
-      color: #fff;
-    }
+    .feedback-bar.ok   { background: #2ec4b6; color: #fff; }
+    .feedback-bar.warn { background: #ff9f1c; color: #fff; }
+    .feedback-bar.err  { background: #ff595e; color: #fff; }
 
     .next-btn-inline {
       border: none;
       background: #ffffff;
       color: #0b7285;
-      font-size: clamp(13px, 3vw, 15px);
+      font-size: clamp(12px, 2.9vw, 14px);
       font-weight: 900;
-      padding: 7px 14px;
-      border-radius: 10px;
+      padding: 6px 12px;
+      border-radius: 9px;
       cursor: pointer;
       white-space: nowrap;
       box-shadow: 0 2px 6px rgba(0,0,0,0.12);
     }
     .next-btn-inline:active { transform: scale(0.95); }
 
-    /* 화폐 비주얼 컴포넌트 */
-    .money-piece {
-      border: none;
+    /* 하단 컨트롤 패널 (지갑 / 키패드) */
+    .control-panel {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 9px;
+      box-shadow: var(--shadow);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .wallet-area {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .wallet-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* 지갑 버튼 슬롯 (작은 동전도 누르기 편하게 카드형 터치 영역 제공) */
+    .wallet-slot {
+      position: relative;
+      border: 1.5px solid #efe4d0;
+      background: #fffcf6;
+      border-radius: 10px;
+      padding: 4px 6px;
       cursor: pointer;
       display: inline-flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-weight: 900;
-      position: relative;
-      transition: transform 0.12s ease;
-      flex-shrink: 0;
-      padding: 0;
+      gap: 2px;
+      transition: transform 0.1s, opacity 0.15s, background 0.15s;
     }
 
-    .money-piece:active { transform: scale(0.9); }
-
-    .money-piece.pop {
-      animation: popIn 0.18s cubic-bezier(0.22, 1.25, 0.36, 1);
+    .wallet-slot.coin-slot {
+      min-width: clamp(56px, 16vw, 76px);
+      min-height: clamp(44px, 6.2vh, 54px);
     }
 
-    /* 동전 스타일 */
-    .coin {
-      border-radius: 50%;
-      box-shadow: inset 0 2px 3px rgba(255,255,255,0.65),
-                  inset 0 -3px 4px rgba(0,0,0,0.2),
-                  0 3px 6px rgba(0,0,0,0.16);
-      border: 2.5px solid rgba(0,0,0,0.14);
-      color: #2b2d42;
+    .wallet-slot.bill-slot {
+      padding: 4px 5px;
+    }
+
+    .wallet-slot:active:not(:disabled) {
+      transform: scale(0.93);
+      background: #fff1d6;
+    }
+
+    .wallet-slot:disabled {
+      opacity: 0.32;
+      filter: grayscale(0.85);
+      cursor: not-allowed;
+      background: #f1f3f5;
+      border-color: #dee2e6;
+    }
+
+    .slot-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: #7c674d;
       line-height: 1;
     }
 
-    .coin::after {
-      content: "";
+    .limit-badge {
       position: absolute;
-      inset: 3px;
-      border-radius: 50%;
-      border: 1px dashed rgba(0,0,0,0.18);
-      pointer-events: none;
-    }
-
-    .coin .unit { font-size: 0.52em; font-weight: 800; opacity: 0.8; margin-top: 1px; }
-
-    .m-10 {
-      width: clamp(40px, 9.5vw, 52px);
-      height: clamp(40px, 9.5vw, 52px);
-      font-size: clamp(13px, 3.1vw, 16px);
-      background: radial-gradient(circle at 30% 30%, #f4a261, #c96a2b);
+      top: -5px;
+      right: -5px;
+      background: #ff595e;
       color: #fff;
-      border-color: #9e4d18;
-    }
-    .m-50 {
-      width: clamp(44px, 10.2vw, 56px);
-      height: clamp(44px, 10.2vw, 56px);
-      font-size: clamp(13px, 3.2vw, 17px);
-      background: radial-gradient(circle at 30% 30%, #f1f5f9, #b8c4d0);
-    }
-    .m-100 {
-      width: clamp(48px, 11vw, 62px);
-      height: clamp(48px, 11vw, 62px);
-      font-size: clamp(14px, 3.4vw, 18px);
-      background: radial-gradient(circle at 30% 30%, #ffffff, #cbd5e1);
-    }
-    .m-500 {
-      width: clamp(54px, 12.2vw, 68px);
-      height: clamp(54px, 12.2vw, 68px);
-      font-size: clamp(15px, 3.6vw, 20px);
-      background: radial-gradient(circle at 30% 30%, #ffffff, #d7dee6);
-      border-color: #94a3b8;
-    }
-
-    /* 지폐 스타일 */
-    .bill {
-      width: clamp(82px, 19.5vw, 116px);
-      height: clamp(44px, 10vw, 58px);
-      border-radius: 8px;
-      box-shadow: inset 0 1px 2px rgba(255,255,255,0.6),
-                  0 3px 6px rgba(0,0,0,0.16);
-      border: 2px solid rgba(0,0,0,0.16);
-      color: #fff;
-      font-size: clamp(14px, 3.4vw, 19px);
-      letter-spacing: -0.4px;
-      overflow: hidden;
-    }
-
-    .bill::before {
-      content: "";
-      position: absolute;
-      inset: 3px;
-      border: 1px solid rgba(255,255,255,0.45);
-      border-radius: 5px;
-      pointer-events: none;
-    }
-
-    .bill .unit { font-size: 0.56em; font-weight: 700; opacity: 0.92; }
-
-    .m-1000 {
-      background: linear-gradient(135deg, #4dabf7, #1c7ed6);
-      border-color: #1864ab;
-    }
-    .m-5000 {
-      background: linear-gradient(135deg, #ffa94d, #e8590c);
-      border-color: #c2410c;
-    }
-    .m-10000 {
-      background: linear-gradient(135deg, #51cf66, #2b8a3e);
-      border-color: #206a2f;
-    }
-
-    /* 하단 컨트롤 덱 (지갑 or 키패드) */
-    .control-panel {
-      background: var(--card);
-      border: 2px solid var(--border);
-      border-radius: var(--radius);
-      padding: 8px 10px;
-      box-shadow: var(--shadow);
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    /* 지갑 모드 */
-    .wallet-grid {
-      display: flex;
-      flex-wrap: wrap;
+      font-size: 10px;
+      font-weight: 900;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      border-radius: 999px;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: clamp(6px, 1.8vw, 12px);
-      padding: 2px 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.22);
     }
 
-    .wallet-hint {
-      font-size: 11px;
-      color: var(--muted);
-      text-align: center;
-      font-weight: 700;
-      margin-top: -2px;
+    .wallet-slot:disabled .limit-badge {
+      background: #868e96;
     }
 
     .action-row {
       display: flex;
-      gap: 8px;
+      gap: 7px;
     }
 
     .btn-action {
       border: none;
-      border-radius: 12px;
-      height: clamp(40px, 6.2vh, 50px);
-      font-size: clamp(14px, 3.6vw, 18px);
+      border-radius: 11px;
+      height: clamp(38px, 5.6vh, 46px);
+      font-size: clamp(13px, 3.4vw, 17px);
       font-weight: 900;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       transition: transform 0.1s;
     }
     .btn-action:active { transform: scale(0.97); }
@@ -576,14 +642,14 @@
     }
 
     .btn-submit {
-      flex: 2.2;
+      flex: 2.3;
       background: var(--primary);
       color: #fff;
       box-shadow: 0 3px 0 var(--primary-dark);
     }
 
     .btn-next-main {
-      flex: 2.2;
+      flex: 2.3;
       background: var(--accent);
       color: #fff;
       box-shadow: 0 3px 0 var(--accent-dark);
@@ -596,22 +662,21 @@
       justify-content: space-between;
       background: #f8f9fa;
       border: 2px solid #dee2e6;
-      border-radius: 12px;
-      padding: 6px 12px;
-      height: clamp(40px, 6vh, 48px);
+      border-radius: 11px;
+      padding: 5px 12px;
+      height: clamp(38px, 5.6vh, 46px);
     }
 
     .keypad-label {
-      font-size: clamp(12px, 2.8vw, 14px);
+      font-size: clamp(12px, 2.7vw, 14px);
       font-weight: 800;
       color: var(--muted);
     }
 
     .keypad-value {
-      font-size: clamp(20px, 5vw, 28px);
+      font-size: clamp(19px, 4.8vw, 26px);
       font-weight: 900;
       color: var(--text);
-      letter-spacing: 0.5px;
     }
 
     .keypad-grid {
@@ -622,34 +687,31 @@
 
     .key-btn {
       border: none;
-      border-radius: 11px;
-      height: clamp(38px, 5.8vh, 48px);
+      border-radius: 10px;
+      height: clamp(36px, 5.4vh, 46px);
       background: #f4f6f8;
       color: var(--text);
-      font-size: clamp(16px, 4vw, 22px);
+      font-size: clamp(16px, 3.8vw, 21px);
       font-weight: 900;
       cursor: pointer;
       box-shadow: 0 2px 0 #d5dbe1;
       transition: transform 0.08s;
     }
 
-    .key-btn:active {
-      transform: translateY(2px);
-      box-shadow: none;
-    }
+    .key-btn:active { transform: translateY(2px); box-shadow: none; }
 
     .key-btn.fn {
       background: #ffe8cc;
       color: #b55d00;
       box-shadow: 0 2px 0 #f5c284;
-      font-size: clamp(14px, 3.4vw, 18px);
+      font-size: clamp(13px, 3.2vw, 17px);
     }
 
     .key-btn.ok {
       background: var(--primary);
       color: #fff;
       box-shadow: 0 2px 0 var(--primary-dark);
-      font-size: clamp(14px, 3.5vw, 18px);
+      font-size: clamp(14px, 3.4vw, 17px);
       grid-row: span 2;
       height: auto;
     }
@@ -660,20 +722,20 @@
       box-shadow: 0 2px 0 var(--accent-dark);
     }
 
-    /* 가로 화면 (낮은 높이: 스마트폰 가로 / 태블릿 가로 최적화) */
-    @media (orientation: landscape) and (max-height: 580px) {
+    /* 가로 화면 (스마트폰 가로 / 태블릿 가로 최적화) */
+    @media (orientation: landscape) and (max-height: 620px) {
+      :root {
+        --tray-mm: clamp(0.68px, 0.14vw, 1.0px);
+        --wallet-mm: clamp(0.62px, 0.12vw, 0.88px);
+        --paid-mm: clamp(0.52px, 0.10vw, 0.74px);
+      }
       #app { gap: 4px; padding-top: 4px; padding-bottom: 4px; }
       .workspace { flex-direction: row; align-items: stretch; }
-      .stage-panel { flex: 1.2; }
-      .control-panel {
-        flex: 0.95;
-        justify-content: space-between;
-        overflow: hidden;
-      }
-      .wallet-grid { flex: 1; align-content: center; }
-      .prompt-card { padding: 6px 10px; }
-      .item-emoji { font-size: 30px; }
-      .key-btn { height: 34px; font-size: 16px; }
+      .stage-panel { flex: 1.15; }
+      .control-panel { flex: 1; justify-content: space-between; overflow: hidden; }
+      .wallet-area { flex: 1; justify-content: center; }
+      .prompt-card { padding: 5px 9px; min-height: 62px; }
+      .key-btn { height: 32px; font-size: 15px; }
     }
 
     /* iOS 설치 안내 모달 */
@@ -711,7 +773,6 @@
       cursor: pointer;
     }
 
-    /* 폭죽 캔버스 */
     #confettiCanvas {
       position: fixed;
       inset: 0;
@@ -720,12 +781,58 @@
     }
 
     @keyframes popIn {
-      from { transform: scale(0.7); opacity: 0; }
+      from { transform: scale(0.72); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
   </style>
 </head>
 <body>
+  <!-- 전역 SVG 화폐 그라데이션 & 패턴 정의 -->
+  <svg width="0" height="0" style="position:absolute;overflow:hidden;" aria-hidden="true">
+    <defs>
+      <!-- 동전 메탈릭 그라데이션 -->
+      <radialGradient id="grad-c10" cx="32%" cy="28%" r="72%">
+        <stop offset="0%" stop-color="#f3b27a" />
+        <stop offset="55%" stop-color="#c97136" />
+        <stop offset="100%" stop-color="#8b4216" />
+      </radialGradient>
+      <radialGradient id="grad-silver" cx="30%" cy="26%" r="74%">
+        <stop offset="0%" stop-color="#ffffff" />
+        <stop offset="50%" stop-color="#d8e0e8" />
+        <stop offset="88%" stop-color="#a8b3be" />
+        <stop offset="100%" stop-color="#87939f" />
+      </radialGradient>
+      <!-- 지폐 배경 그라데이션 -->
+      <linearGradient id="grad-b1000" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#dff1ff" />
+        <stop offset="48%" stop-color="#85c4f5" />
+        <stop offset="100%" stop-color="#3887cf" />
+      </linearGradient>
+      <linearGradient id="grad-b5000" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fff0d8" />
+        <stop offset="48%" stop-color="#f5ae68" />
+        <stop offset="100%" stop-color="#cf6f29" />
+      </linearGradient>
+      <linearGradient id="grad-b10000" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#e4f9e6" />
+        <stop offset="48%" stop-color="#76cc87" />
+        <stop offset="100%" stop-color="#2f8f48" />
+      </linearGradient>
+      <linearGradient id="grad-b50000" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fff7cc" />
+        <stop offset="48%" stop-color="#f1cb59" />
+        <stop offset="100%" stop-color="#c9931a" />
+      </linearGradient>
+      <!-- 홀로그램 은선 그라데이션 -->
+      <linearGradient id="grad-holo" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffe066" stop-opacity="0.85" />
+        <stop offset="35%" stop-color="#74c0fc" stop-opacity="0.85" />
+        <stop offset="70%" stop-color="#f783ac" stop-opacity="0.85" />
+        <stop offset="100%" stop-color="#63e6be" stop-opacity="0.85" />
+      </linearGradient>
+    </defs>
+  </svg>
+
   <canvas id="confettiCanvas"></canvas>
 
   <div id="app">
@@ -736,14 +843,14 @@
         <span class="brand-title">어린이 화폐 놀이</span>
       </div>
       <div class="header-actions">
-        <div class="score-pill" id="scorePill">⭐ <span id="scoreVal">0</span></div>
-        <button class="icon-btn" id="hintBtn" title="합계 힌트">💡 힌트</button>
-        <button class="icon-btn" id="soundBtn" title="소리 켜기/끄기">🔊</button>
+        <div class="score-pill">⭐ <span id="scoreVal">0</span></div>
+        <button class="icon-btn" id="hintBtn">💡 힌트</button>
+        <button class="icon-btn" id="soundBtn">🔊</button>
         <button class="icon-btn install-btn" id="installBtn">📲 설치</button>
       </div>
     </header>
 
-    <!-- 모드 및 난이도 -->
+    <!-- 모드 & 난이도 -->
     <nav class="toolbar">
       <div class="seg-group modes" id="modeGroup">
         <button class="seg-btn" data-mode="pay">🛒 돈 내기</button>
@@ -759,25 +866,36 @@
 
     <!-- 메인 작업 영역 -->
     <main class="workspace">
-      <!-- 문제 & 돈 쟁반 -->
       <section class="stage-panel">
+        <!-- 문제 카드 -->
         <div class="prompt-card">
-          <div class="item-box">
-            <div class="item-emoji" id="itemEmoji">🍓</div>
-            <div class="item-info">
-              <span class="prompt-label" id="promptLabel">물건값만큼 돈을 내주세요!</span>
-              <span class="item-name" id="itemName">딸기 아이스크림</span>
+          <div class="product-col">
+            <div class="product-top">
+              <span class="item-emoji" id="itemEmoji">🍬</span>
+              <span class="item-name" id="itemName">사탕</span>
             </div>
+            <div class="price-tag" id="priceTag">500원</div>
           </div>
-          <div class="price-area" id="priceArea">
-            <div class="price-tag" id="priceTag">700원</div>
-            <div class="paid-tag" id="paidTag" style="display:none;">손님이 낸 돈: 1,000원</div>
+
+          <div class="prompt-right">
+            <div class="prompt-msg" id="promptMsg">물건값만큼 돈을 내주세요!</div>
+            <div class="rule-badge" id="ruleBadge"></div>
+
+            <!-- 거스름돈 모드 전용: 손님이 낸 돈 이미지 -->
+            <div class="paid-box" id="paidBox">
+              <div class="paid-header">
+                <span>손님이 낸 돈</span>
+                <span id="paidAmountHint"></span>
+              </div>
+              <div class="paid-visual" id="paidVisual"></div>
+            </div>
           </div>
         </div>
 
+        <!-- 계산대 쟁반 -->
         <div class="tray-card">
           <div class="tray-header">
-            <span class="tray-title" id="trayTitle">💰 계산대 쟁반 (터치하면 빠집니다)</span>
+            <span class="tray-title" id="trayTitle">💰 계산대 쟁반 (누르면 빠집니다)</span>
             <span class="tray-sum" id="traySum">합계: 0원</span>
           </div>
           <div class="tray-items" id="trayItems"></div>
@@ -789,16 +907,16 @@
         </div>
       </section>
 
-      <!-- 하단 입력 영역 (지갑 / 키패드 전환) -->
+      <!-- 지갑 패널 (돈 내기 / 거스름돈) -->
       <section class="control-panel" id="walletPanel">
-        <div class="wallet-grid" id="walletGrid"></div>
-        <div class="wallet-hint" id="walletHint">아래 지갑에서 동전이나 지폐를 눌러 올려주세요</div>
+        <div class="wallet-area" id="walletArea"></div>
         <div class="action-row">
           <button class="btn-action btn-clear" id="clearTrayBtn">🗑️ 비우기</button>
           <button class="btn-action btn-submit" id="checkTrayBtn">✅ 계산하기</button>
         </div>
       </section>
 
+      <!-- 키패드 패널 (돈 세기) -->
       <section class="control-panel" id="keypadPanel" style="display:none;">
         <div class="keypad-display">
           <span class="keypad-label">내가 적은 금액</span>
@@ -828,7 +946,7 @@
     </main>
   </div>
 
-  <!-- iOS 앱 설치 안내 모달 -->
+  <!-- iOS 설치 안내 모달 -->
   <div class="modal-backdrop" id="iosModal">
     <div class="modal-box">
       <h3>📲 홈 화면에 앱으로 추가하기</h3>
@@ -843,8 +961,8 @@
 
   <script>
     (() => {
-      // === 설정 및 상태 저장 ===
-      const STORAGE_KEY = 'kids_money_game_state_v1';
+      // === 상태 저장 ===
+      const STORAGE_KEY = 'kids_money_game_state_v2';
       const defaultState = {
         mode: 'pay',   // 'pay' | 'count' | 'change'
         level: 1,      // 1 | 2 | 3
@@ -856,50 +974,247 @@
       let state = { ...defaultState };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (saved && typeof saved === 'object') {
-          state = { ...defaultState, ...saved };
-        }
+        if (saved && typeof saved === 'object') state = { ...defaultState, ...saved };
       } catch (e) {}
 
       function saveState() {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        } catch (e) {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       }
 
-      // === 난이도별 화폐 구성 ===
-      const LEVEL_DENOMS = {
-        1: [100, 500, 1000],
-        2: [10, 50, 100, 500, 1000],
-        3: [100, 500, 1000, 5000, 10000]
-      };
+      // === 전체 화폐 단위 ===
+      const ALL_DENOMS = [10, 50, 100, 500, 1000, 5000, 10000, 50000];
+      const UNIT1_DENOMS = [10, 100, 1000, 10000];
 
-      // === 가게 물건 목록 ===
-      const SHOP_ITEMS = [
-        { emoji: '🍬', name: '달콤 사탕' },
-        { emoji: '🍦', name: '딸기 아이스크림' },
-        { emoji: '🍩', name: '초코 도넛' },
-        { emoji: '🍎', name: '빨간 사과' },
-        { emoji: '🧃', name: '오렌지 주스' },
-        { emoji: '🧁', name: '생크림 컵케이크' },
-        { emoji: '🍪', name: '초코칩 쿠키' },
-        { emoji: '🖍️', name: '알록달록 크레파스' },
-        { emoji: '🚗', name: '장난감 자동차' },
-        { emoji: '🧸', name: '귀여운 곰인형' },
-        { emoji: '🎈', name: '하늘 풍선' },
-        { emoji: '🍕', name: '치즈 피자' },
-        { emoji: '🥪', name: '계란 샌드위치' },
-        { emoji: '📚', name: '재미있는 동화책' },
-        { emoji: '🦖', name: '공룡 피규어' },
-        { emoji: '⚽', name: '축구공' }
+      // === 현실 가격대별 물건 목록 ===
+      const PRODUCT_CATALOG = [
+        { emoji: '🍬', name: '막대사탕', min: 200, max: 500 },
+        { emoji: '🎈', name: '풍선', min: 300, max: 800 },
+        { emoji: '✏️', name: '연필', min: 400, max: 900 },
+        { emoji: '🧽', name: '지우개', min: 500, max: 1000 },
+        { emoji: '🍪', name: '초코쿠키', min: 600, max: 1500 },
+        { emoji: '🧃', name: '사과주스', min: 800, max: 1800 },
+        { emoji: '🥛', name: '우유', min: 1000, max: 2200 },
+        { emoji: '🍙', name: '삼각김밥', min: 1100, max: 1900 },
+        { emoji: '🍦', name: '아이스크림', min: 1200, max: 2800 },
+        { emoji: '📓', name: '공책', min: 1200, max: 2600 },
+        { emoji: '🍩', name: '도넛', min: 1500, max: 3200 },
+        { emoji: '🍎', name: '사과', min: 1500, max: 3000 },
+        { emoji: '🥐', name: '소금빵', min: 2200, max: 3800 },
+        { emoji: '🥪', name: '샌드위치', min: 3000, max: 5800 },
+        { emoji: '🧁', name: '컵케이크', min: 3200, max: 5500 },
+        { emoji: '🖍️', name: '크레파스', min: 3500, max: 7800 },
+        { emoji: '🍔', name: '햄버거', min: 4500, max: 7900 },
+        { emoji: '🎨', name: '물감세트', min: 5500, max: 11500 },
+        { emoji: '🚗', name: '미니카', min: 6500, max: 14500 },
+        { emoji: '📚', name: '동화책', min: 8500, max: 16500 },
+        { emoji: '🦖', name: '공룡 피규어', min: 8000, max: 18500 },
+        { emoji: '🧸', name: '곰인형', min: 9500, max: 19800 },
+        { emoji: '⚽', name: '축구공', min: 11000, max: 22000 },
+        { emoji: '🍕', name: '치즈 피자', min: 13000, max: 24500 },
+        { emoji: '🎂', name: '생일 케이크', min: 22000, max: 39000 },
+        { emoji: '🧩', name: '블록 세트', min: 25000, max: 58000 },
+        { emoji: '🤖', name: '변신 로봇', min: 28000, max: 66000 },
+        { emoji: '🎒', name: '책가방', min: 32000, max: 68000 },
+        { emoji: '👟', name: '운동화', min: 36000, max: 74000 },
+        { emoji: '🛴', name: '킥보드', min: 45000, max: 79000 }
       ];
 
+      function pickProductForPrice(price) {
+        const matched = PRODUCT_CATALOG.filter(p => price >= p.min && price <= p.max);
+        if (matched.length > 0) return pickRandom(matched);
+        // 가장 가까운 가격대의 물건 선택
+        let best = PRODUCT_CATALOG[0];
+        let bestDist = Infinity;
+        for (const p of PRODUCT_CATALOG) {
+          const mid = (p.min + p.max) / 2;
+          const dist = Math.abs(mid - price);
+          if (dist < bestDist) { bestDist = dist; best = p; }
+        }
+        return best;
+      }
+
+      // === 실제 한국 화폐 벡터 SVG 생성 ===
+      function createMoneySVG(val) {
+        const cls = `money-svg d-${val}`;
+        if (val === 10) {
+          return `<svg class="${cls}" viewBox="0 0 100 100" aria-label="10원">
+            <circle cx="50" cy="50" r="48" fill="url(#grad-c10)" stroke="#75340d" stroke-width="3.5"/>
+            <circle cx="50" cy="50" r="41" fill="none" stroke="#f7caa0" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.7"/>
+            <!-- 다보탑 실루엣 -->
+            <g fill="#7a370e" opacity="0.28">
+              <rect x="33" y="72" width="34" height="6" rx="1"/>
+              <polygon points="36,72 64,72 58,60 42,60"/>
+              <rect x="40" y="48" width="20" height="12"/>
+              <polygon points="35,48 65,48 56,36 44,36"/>
+              <polygon points="43,36 57,36 50,22"/>
+            </g>
+            <text x="50" y="61" text-anchor="middle" font-size="42" font-weight="900" fill="#fff7ee" stroke="#6e2e09" stroke-width="2.5" paint-order="stroke">10</text>
+          </svg>`;
+        }
+        if (val === 50) {
+          return `<svg class="${cls}" viewBox="0 0 100 100" aria-label="50원">
+            <circle cx="50" cy="50" r="48" fill="url(#grad-silver)" stroke="#74808c" stroke-width="3.5"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.8"/>
+            <!-- 벼이삭 실루엣 -->
+            <g stroke="#6c7884" stroke-width="3" fill="none" opacity="0.32" stroke-linecap="round">
+              <path d="M36 78 Q38 45 62 24"/>
+              <path d="M48 40 L40 33 M54 34 L48 26 M43 49 L34 44 M50 53 L60 49 M44 62 L55 59"/>
+            </g>
+            <text x="50" y="62" text-anchor="middle" font-size="40" font-weight="900" fill="#2b3440" stroke="#ffffff" stroke-width="2.2" paint-order="stroke">50</text>
+          </svg>`;
+        }
+        if (val === 100) {
+          return `<svg class="${cls}" viewBox="0 0 100 100" aria-label="100원">
+            <circle cx="50" cy="50" r="48" fill="url(#grad-silver)" stroke="#6c7782" stroke-width="3.5"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="3.5 2" opacity="0.8"/>
+            <!-- 이순신 장군 흉상 실루엣 -->
+            <g fill="#5b6672" opacity="0.25">
+              <circle cx="50" cy="37" r="13"/>
+              <path d="M35 30 Q50 18 65 30 Z"/>
+              <path d="M27 78 Q31 54 50 53 Q69 54 73 78 Z"/>
+            </g>
+            <text x="50" y="61" text-anchor="middle" font-size="33" font-weight="900" fill="#1e2730" stroke="#ffffff" stroke-width="2.4" paint-order="stroke">100</text>
+          </svg>`;
+        }
+        if (val === 500) {
+          return `<svg class="${cls}" viewBox="0 0 100 100" aria-label="500원">
+            <circle cx="50" cy="50" r="48" fill="url(#grad-silver)" stroke="#5c6670" stroke-width="3.5"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 2" opacity="0.85"/>
+            <!-- 두루미(학) 날개 실루엣 -->
+            <g fill="#4f5a66" opacity="0.26">
+              <path d="M22 44 Q42 20 56 42 Q70 22 80 34 Q68 50 52 52 Q36 58 22 44 Z"/>
+              <path d="M52 52 L68 74 L58 76 L46 56 Z"/>
+            </g>
+            <text x="50" y="62" text-anchor="middle" font-size="33" font-weight="900" fill="#192129" stroke="#ffffff" stroke-width="2.5" paint-order="stroke">500</text>
+          </svg>`;
+        }
+
+        // === 지폐 공통 구성 (실제 mm 비율: 136x68, 142x68, 148x68, 154x68) ===
+        if (val === 1000) {
+          return `<svg class="${cls}" viewBox="0 0 136 68" aria-label="1000원">
+            <rect x="1" y="1" width="134" height="66" rx="4" fill="url(#grad-b1000)" stroke="#1b5e9e" stroke-width="2"/>
+            <rect x="4.5" y="4.5" width="127" height="59" rx="2.5" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.65"/>
+            <!-- 좌측 은화 타원 -->
+            <ellipse cx="23" cy="36" rx="13" ry="18" fill="#ffffff" opacity="0.34"/>
+            <!-- 매화 꽃잎 장식 -->
+            <g fill="#1d65ab" opacity="0.22">
+              <circle cx="62" cy="46" r="5"/><circle cx="70" cy="42" r="4"/><circle cx="58" cy="54" r="3.5"/>
+              <path d="M44 58 Q62 46 82 32" stroke="#1d65ab" stroke-width="2" fill="none"/>
+            </g>
+            <!-- 퇴계 이황 초상 스타일 -->
+            <g transform="translate(88, 13)">
+              <ellipse cx="18" cy="24" rx="11" ry="13" fill="#e8f3fc" stroke="#1b5e9e" stroke-width="1.3"/>
+              <path d="M6 17 Q18 6 30 17 L27 20 Q18 13 9 20 Z" fill="#1b4f82"/>
+              <rect x="11" y="9" width="14" height="8" rx="2" fill="#1b4f82"/>
+              <path d="M13 24 Q14.5 23 16 24 M20 24 Q21.5 23 23 24" stroke="#1b4f82" stroke-width="1.3" fill="none"/>
+              <path d="M14 31 Q18 37 22 31" stroke="#1b4f82" stroke-width="1.5" fill="none"/>
+              <path d="M4 50 Q8 36 18 36 Q28 36 32 50 Z" fill="#2c75ba"/>
+              <path d="M14 36 L18 45 L22 36" fill="none" stroke="#ffffff" stroke-width="1.4"/>
+            </g>
+            <!-- 홀로그램 세로선 -->
+            <rect x="44" y="5" width="2.2" height="58" fill="url(#grad-holo)" opacity="0.7"/>
+            <!-- 텍스트 -->
+            <text x="10" y="21" font-size="15.5" font-weight="900" fill="#0d4278" stroke="#ffffff" stroke-width="1.2" paint-order="stroke">1000</text>
+            <text x="58" y="16" font-size="7.5" font-weight="800" fill="#124a82">한국은행</text>
+            <text x="10" y="58" font-size="9" font-weight="900" fill="#0d4278">천원</text>
+            <text x="90" y="60" font-size="12" font-weight="900" fill="#ffffff" stroke="#0d4278" stroke-width="1.5" paint-order="stroke">1000</text>
+          </svg>`;
+        }
+        if (val === 5000) {
+          return `<svg class="${cls}" viewBox="0 0 142 68" aria-label="5000원">
+            <rect x="1" y="1" width="140" height="66" rx="4" fill="url(#grad-b5000)" stroke="#a85015" stroke-width="2"/>
+            <rect x="4.5" y="4.5" width="133" height="59" rx="2.5" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.65"/>
+            <!-- 좌측 은화 & 사각 홀로그램 -->
+            <ellipse cx="24" cy="36" rx="13" ry="18" fill="#ffffff" opacity="0.34"/>
+            <rect x="41" y="42" width="12" height="12" rx="1.5" fill="url(#grad-holo)" stroke="#fff" stroke-width="0.8"/>
+            <!-- 대나무 배경 -->
+            <g stroke="#a85015" stroke-width="1.8" opacity="0.24" fill="none">
+              <path d="M62 60 L66 18 M74 60 L72 24"/>
+              <path d="M65 34 L56 29 M65 44 L76 38 M72 30 L82 26"/>
+            </g>
+            <!-- 율곡 이이 초상 스타일 -->
+            <g transform="translate(92, 13)">
+              <ellipse cx="18" cy="24" rx="11" ry="13" fill="#fff3e2" stroke="#994410" stroke-width="1.3"/>
+              <path d="M7 16 L18 7 L29 16 L26 20 L10 20 Z" fill="#82370b"/>
+              <path d="M13 24 Q14.5 23 16 24 M20 24 Q21.5 23 23 24" stroke="#82370b" stroke-width="1.3" fill="none"/>
+              <path d="M14 31 Q18 36 22 31" stroke="#82370b" stroke-width="1.4" fill="none"/>
+              <path d="M4 50 Q8 36 18 36 Q28 36 32 50 Z" fill="#c76420"/>
+              <path d="M14 36 L18 45 L22 36" fill="none" stroke="#fff4e6" stroke-width="1.4"/>
+            </g>
+            <text x="10" y="21" font-size="15.5" font-weight="900" fill="#853506" stroke="#ffffff" stroke-width="1.2" paint-order="stroke">5000</text>
+            <text x="60" y="16" font-size="7.5" font-weight="800" fill="#853506">한국은행</text>
+            <text x="10" y="58" font-size="9" font-weight="900" fill="#853506">오천원</text>
+            <text x="94" y="60" font-size="12" font-weight="900" fill="#ffffff" stroke="#853506" stroke-width="1.5" paint-order="stroke">5000</text>
+          </svg>`;
+        }
+        if (val === 10000) {
+          return `<svg class="${cls}" viewBox="0 0 148 68" aria-label="10000원">
+            <rect x="1" y="1" width="146" height="66" rx="4" fill="url(#grad-b10000)" stroke="#1b6b32" stroke-width="2"/>
+            <rect x="4.5" y="4.5" width="139" height="59" rx="2.5" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.65"/>
+            <!-- 좌측 은화 & 원형 홀로그램 -->
+            <ellipse cx="24" cy="36" rx="13" ry="18" fill="#ffffff" opacity="0.34"/>
+            <circle cx="47" cy="48" r="7" fill="url(#grad-holo)" stroke="#fff" stroke-width="0.9"/>
+            <!-- 일월오봉도 산 & 해/달 배경 -->
+            <g fill="#196930" opacity="0.2">
+              <circle cx="66" cy="24" r="4.5"/>
+              <circle cx="80" cy="24" r="4"/>
+              <polygon points="52,58 64,34 74,58"/>
+              <polygon points="64,58 76,30 88,58"/>
+            </g>
+            <!-- 세종대왕 초상 스타일 -->
+            <g transform="translate(97, 13)">
+              <ellipse cx="18" cy="25" rx="11.5" ry="12.5" fill="#eefaf0" stroke="#18612c" stroke-width="1.3"/>
+              <!-- 익선관 -->
+              <path d="M9 17 Q18 5 27 17 Z" fill="#175227"/>
+              <path d="M8 15 L4 11 M28 15 L32 11" stroke="#175227" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M13 24 Q14.5 23 16 24 M20 24 Q21.5 23 23 24" stroke="#175227" stroke-width="1.3" fill="none"/>
+              <path d="M13 31 Q18 39 23 31" stroke="#175227" stroke-width="1.6" fill="none"/>
+              <path d="M3 50 Q7 36 18 36 Q29 36 33 50 Z" fill="#237a3b"/>
+              <circle cx="18" cy="44" r="4" fill="#ffe066" opacity="0.8"/>
+            </g>
+            <text x="9" y="21" font-size="14.5" font-weight="900" fill="#0f5222" stroke="#ffffff" stroke-width="1.2" paint-order="stroke">10000</text>
+            <text x="64" y="16" font-size="7.5" font-weight="800" fill="#0f5222">한국은행</text>
+            <text x="10" y="58" font-size="9" font-weight="900" fill="#0f5222">만원</text>
+            <text x="95" y="60" font-size="11.5" font-weight="900" fill="#ffffff" stroke="#0f5222" stroke-width="1.5" paint-order="stroke">10000</text>
+          </svg>`;
+        }
+        // 50,000원
+        return `<svg class="${cls}" viewBox="0 0 154 68" aria-label="50000원">
+          <rect x="1" y="1" width="152" height="66" rx="4" fill="url(#grad-b50000)" stroke="#9e6d0b" stroke-width="2"/>
+          <rect x="4.5" y="4.5" width="145" height="59" rx="2.5" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.7"/>
+          <!-- 좌측 은화 -->
+          <ellipse cx="23" cy="36" rx="12.5" ry="18" fill="#ffffff" opacity="0.38"/>
+          <!-- 5만원권 특유의 수직 띠형 홀로그램 -->
+          <rect x="40" y="4.5" width="6.5" height="59" fill="url(#grad-holo)" opacity="0.85"/>
+          <!-- 묵포도도 배경 -->
+          <g fill="#8c5c05" opacity="0.22">
+            <circle cx="72" cy="34" r="3.5"/><circle cx="78" cy="35" r="3.5"/><circle cx="75" cy="40" r="3.5"/>
+            <circle cx="81" cy="41" r="3.2"/><circle cx="77" cy="46" r="3"/>
+          </g>
+          <!-- 신사임당 초상 스타일 -->
+          <g transform="translate(103, 13)">
+            <ellipse cx="18" cy="24" rx="10.5" ry="12.5" fill="#fffbe6" stroke="#8c5c05" stroke-width="1.3"/>
+            <!-- 쪽머리/가르마 -->
+            <path d="M7 22 Q8 10 18 10 Q28 10 29 22 Q24 14 18 15 Q12 14 7 22 Z" fill="#5e3d03"/>
+            <circle cx="18" cy="10" r="3.5" fill="#5e3d03"/>
+            <path d="M13 24 Q14.5 23 16 24 M20 24 Q21.5 23 23 24" stroke="#5e3d03" stroke-width="1.2" fill="none"/>
+            <path d="M15.5 30 Q18 32 20.5 30" stroke="#a64b2a" stroke-width="1.2" fill="none"/>
+            <path d="M4 50 Q8 36 18 36 Q28 36 32 50 Z" fill="#d49a1e"/>
+            <path d="M12 37 L18 45 L24 37" fill="none" stroke="#ffffff" stroke-width="1.8"/>
+          </g>
+          <text x="9" y="21" font-size="14.5" font-weight="900" fill="#7a4e00" stroke="#ffffff" stroke-width="1.2" paint-order="stroke">50000</text>
+          <text x="66" y="16" font-size="7.5" font-weight="800" fill="#7a4e00">한국은행</text>
+          <text x="10" y="58" font-size="9" font-weight="900" fill="#7a4e00">오만원</text>
+          <text x="99" y="60" font-size="11.5" font-weight="900" fill="#ffffff" stroke="#7a4e00" stroke-width="1.5" paint-order="stroke">50000</text>
+        </svg>`;
+      }
+
       // === 현재 문제 상태 ===
-      let currentProblem = null; // { item, price, paid, target, countCoins }
+      let currentProblem = null;
       let trayCoins = [];
       let keypadInput = '';
       let isSolved = false;
-      const MAX_TRAY_ITEMS = 24;
+      const MAX_TRAY_ITEMS = 30;
 
       // === DOM 참조 ===
       const scoreVal = document.getElementById('scoreVal');
@@ -910,11 +1225,13 @@
       const levelGroup = document.getElementById('levelGroup');
 
       const itemEmoji = document.getElementById('itemEmoji');
-      const promptLabel = document.getElementById('promptLabel');
       const itemName = document.getElementById('itemName');
-      const priceArea = document.getElementById('priceArea');
       const priceTag = document.getElementById('priceTag');
-      const paidTag = document.getElementById('paidTag');
+      const promptMsg = document.getElementById('promptMsg');
+      const ruleBadge = document.getElementById('ruleBadge');
+      const paidBox = document.getElementById('paidBox');
+      const paidAmountHint = document.getElementById('paidAmountHint');
+      const paidVisual = document.getElementById('paidVisual');
 
       const trayTitle = document.getElementById('trayTitle');
       const traySum = document.getElementById('traySum');
@@ -924,8 +1241,7 @@
       const nextBtnInline = document.getElementById('nextBtnInline');
 
       const walletPanel = document.getElementById('walletPanel');
-      const walletGrid = document.getElementById('walletGrid');
-      const walletHint = document.getElementById('walletHint');
+      const walletArea = document.getElementById('walletArea');
       const clearTrayBtn = document.getElementById('clearTrayBtn');
       const checkTrayBtn = document.getElementById('checkTrayBtn');
 
@@ -943,9 +1259,7 @@
           const AC = window.AudioContext || window.webkitAudioContext;
           if (AC) audioCtx = new AC();
         }
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         return audioCtx;
       }
 
@@ -953,20 +1267,18 @@
         if (!state.soundOn) return;
         const ctx = getAudioCtx();
         if (!ctx) return;
-
         const now = ctx.currentTime;
+
         if (type === 'coin') {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(1400, now);
-          osc.frequency.exponentialRampToValueAtTime(2200, now + 0.08);
+          osc.frequency.setValueAtTime(1450, now);
+          osc.frequency.exponentialRampToValueAtTime(2350, now + 0.08);
           gain.gain.setValueAtTime(0.14, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.15);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(now); osc.stop(now + 0.15);
         } else if (type === 'bill') {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -975,10 +1287,8 @@
           osc.frequency.exponentialRampToValueAtTime(520, now + 0.07);
           gain.gain.setValueAtTime(0.13, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.11);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(now); osc.stop(now + 0.11);
         } else if (type === 'pop') {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -987,13 +1297,10 @@
           osc.frequency.exponentialRampToValueAtTime(320, now + 0.07);
           gain.gain.setValueAtTime(0.11, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.09);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(now); osc.stop(now + 0.09);
         } else if (type === 'success') {
-          const notes = [523.25, 659.25, 783.99, 1046.5];
-          notes.forEach((freq, i) => {
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = 'triangle';
@@ -1001,23 +1308,19 @@
             osc.frequency.setValueAtTime(freq, t);
             gain.gain.setValueAtTime(0.16, t);
             gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(t);
-            osc.stop(t + 0.23);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(t); osc.stop(t + 0.23);
           });
         } else if (type === 'wrong') {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(240, now);
-          osc.frequency.linearRampToValueAtTime(180, now + 0.18);
+          osc.frequency.linearRampToValueAtTime(175, now + 0.18);
           gain.gain.setValueAtTime(0.1, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.23);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(now); osc.stop(now + 0.23);
         }
       }
 
@@ -1058,11 +1361,7 @@
         cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
         confettiParticles = confettiParticles.filter(p => p.life > 0);
         for (const p of confettiParticles) {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.32;
-          p.rot += p.vrot;
-          p.life -= 1;
+          p.x += p.vx; p.y += p.vy; p.vy += 0.32; p.rot += p.vrot; p.life -= 1;
           cCtx.save();
           cCtx.translate(p.x, p.y);
           cCtx.rotate((p.rot * Math.PI) / 180);
@@ -1071,142 +1370,414 @@
           cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
           cCtx.restore();
         }
-        if (confettiParticles.length > 0) {
-          confettiAnimId = requestAnimationFrame(animateConfetti);
-        } else {
-          cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-        }
+        if (confettiParticles.length > 0) confettiAnimId = requestAnimationFrame(animateConfetti);
+        else cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
       }
 
       // === 유틸리티 ===
-      function fmt(num) {
-        return Number(num).toLocaleString('ko-KR');
+      function fmt(num) { return Number(num).toLocaleString('ko-KR'); }
+      function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+      function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+      // 금액을 가장 적은 개수의 화폐 조합으로 분해 (손님이 낸 돈 이미지용)
+      function toGreedyCoins(amount) {
+        const res = [];
+        let rem = amount;
+        for (let i = ALL_DENOMS.length - 1; i >= 0; i--) {
+          const d = ALL_DENOMS[i];
+          while (rem >= d) {
+            res.push(d);
+            rem -= d;
+          }
+        }
+        return res;
       }
 
-      function randInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+      // 세로셈 뺄셈 자릿수 간섭(받아내림) 횟수 계산
+      function countBorrows(paid, price) {
+        let p = paid;
+        let c = price;
+        let borrow = 0;
+        let count = 0;
+        while (p > 0 || c > 0) {
+          const dp = (p % 10) - borrow;
+          const dc = c % 10;
+          if (dp < dc) {
+            count++;
+            borrow = 1;
+          } else {
+            borrow = 0;
+          }
+          p = Math.floor(p / 10);
+          c = Math.floor(c / 10);
+        }
+        return count;
       }
 
-      function pickRandom(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
+      // 돈 세기 올림 발생 여부 검증
+      function hasCarry(coins) {
+        let s10 = 0, s100 = 0, s1000 = 0;
+        for (const v of coins) {
+          if (v === 10 || v === 50) s10 += v;
+          else if (v === 100 || v === 500) s100 += v;
+          else if (v === 1000 || v === 5000) s1000 += v;
+        }
+        return s10 >= 100 || s100 >= 1000 || s1000 >= 10000;
       }
 
-      function createMoneyElement(value, interactive = true, pop = false) {
-        const btn = document.createElement(interactive ? 'button' : 'div');
-        const isBill = value >= 1000;
-        btn.className = `money-piece ${isBill ? 'bill' : 'coin'} m-${value}${pop ? ' pop' : ''}`;
-        if (interactive) btn.type = 'button';
-        btn.dataset.val = value;
-        btn.innerHTML = `<span>${fmt(value)}</span><span class="unit">원</span>`;
-        return btn;
+      // === 1. 돈 내기 문제 생성 ===
+      function buildPayProblem(lv) {
+        if (lv === 1) {
+          // 초급: 10 / 100 / 1000 / 10000원만 사용 (자릿수별 0~4개 위주, 현실적 가격)
+          const patterns = [
+            () => randInt(1, 3) * 1000 + randInt(1, 4) * 100,                           // 1,100 ~ 3,400
+            () => randInt(1, 3) * 1000 + randInt(1, 3) * 100 + randInt(1, 4) * 10,      // 1,110 ~ 3,340
+            () => randInt(1, 2) * 10000 + randInt(1, 4) * 1000 + randInt(1, 3) * 100,   // 11,100 ~ 24,300
+            () => randInt(3, 4) * 100 + randInt(1, 4) * 10,                             // 310 ~ 440
+            () => randInt(2, 4) * 1000 + randInt(1, 4) * 100                            // 2,100 ~ 4,400
+          ];
+          const price = pickRandom(patterns)();
+          const item = pickProductForPrice(price);
+          return {
+            item,
+            price,
+            target: price,
+            walletDenoms: [...UNIT1_DENOMS],
+            walletLimits: null,
+            ruleNote: ''
+          };
+        }
+
+        if (lv === 2) {
+          // 중급: 5단위(50/500/5000/50000) 섞기 필수 (시스템적 1단위 개수 제한)
+          // 5 이상인 자릿수(특히 6~9)가 최소 2개 포함되도록 현실 가격 생성
+          let price = 7700;
+          for (let attempt = 0; attempt < 60; attempt++) {
+            const tier = pickRandom(['small', 'mid', 'large', 'xlarge']);
+            let d10000 = 0, d1000 = 0, d100 = 0, d10 = 0;
+            if (tier === 'small') {
+              d100 = randInt(5, 9);
+              d10 = pickRandom([0, 5, 6, 7, 8, 9]);
+            } else if (tier === 'mid') {
+              d1000 = randInt(5, 9);
+              d100 = randInt(5, 9);
+              d10 = pickRandom([0, 0, 5, 6, 7, 8]);
+            } else if (tier === 'large') {
+              d10000 = randInt(1, 3);
+              d1000 = randInt(5, 9);
+              d100 = randInt(5, 9);
+              d10 = 0;
+            } else {
+              d10000 = randInt(5, 7);
+              d1000 = randInt(5, 9);
+              d100 = pickRandom([0, 5, 6, 7, 8]);
+              d10 = 0;
+            }
+            const cand = d10000 * 10000 + d1000 * 1000 + d100 * 100 + d10 * 10;
+            const highDigits = [d10000, d1000, d100, d10].filter(d => d >= 5).length;
+            if (cand >= 550 && cand <= 79000 && highDigits >= 2) {
+              price = cand;
+              break;
+            }
+          }
+
+          // 시스템 제약: 자릿수 d >= 6이면 1단위 화폐 최대 (d - 5)개, d <= 5이면 최대 4개, 5단위 화폐는 각 1개
+          const walletLimits = {};
+          for (const u of UNIT1_DENOMS) {
+            const d = Math.floor(price / u) % 10;
+            walletLimits[u] = d >= 6 ? (d - 5) : 4;
+            walletLimits[u * 5] = 1;
+          }
+
+          const item = pickProductForPrice(price);
+          return {
+            item,
+            price,
+            target: price,
+            walletDenoms: [...ALL_DENOMS],
+            walletLimits,
+            ruleNote: '5단위(50·500·5천·5만원)를 섞어 내야 해요!'
+          };
+        }
+
+        // 고급: 가장 큰 단위 돈이 선택지에 없음 (환전 개념)
+        const tiers = [
+          // 1,000원 없음 -> 500원, 100원, 50원, 10원으로 1,200~2,450원 내기
+          () => ({ price: randInt(12, 24) * 100 + pickRandom([0, 50]), maxBlocked: 1000 }),
+          // 5,000원 없음 -> 1,000원 이하로 5,200~8,800원 내기
+          () => ({ price: randInt(52, 88) * 100, maxBlocked: 5000 }),
+          // 10,000원 없음 -> 5,000원 이하로 11,200~24,800원 내기 (예: 12,600원)
+          () => ({ price: randInt(112, 248) * 100, maxBlocked: 10000 }),
+          // 50,000원 없음 -> 10,000원 이하로 52,000~76,000원 내기
+          () => ({ price: randInt(52, 76) * 1000 + pickRandom([0, 500]), maxBlocked: 50000 })
+        ];
+        const picked = pickRandom(tiers)();
+        const walletDenoms = ALL_DENOMS.filter(d => d < picked.maxBlocked);
+        const item = pickProductForPrice(picked.price);
+        return {
+          item,
+          price: picked.price,
+          target: picked.price,
+          walletDenoms,
+          walletLimits: null,
+          ruleNote: `${fmt(picked.maxBlocked)}원 없이 작은 돈으로 내보세요!`
+        };
       }
 
-      // === 문제 생성 ===
+      // === 2. 돈 세기 문제 생성 ===
+      function buildCountProblem(lv) {
+        const coins = [];
+
+        if (lv === 1) {
+          // 초급: 10/100/1000/10000원만 사용, 자릿수 올림 없음
+          const activeUnits = [...UNIT1_DENOMS];
+          // 2~4개 단위 선택
+          const shuffled = activeUnits.sort(() => Math.random() - 0.5);
+          const pickCount = randInt(2, 4);
+          const chosen = shuffled.slice(0, pickCount);
+          for (const u of chosen) {
+            const cnt = randInt(1, 4);
+            for (let i = 0; i < cnt; i++) coins.push(u);
+          }
+        } else if (lv === 2) {
+          // 중급: 10/50/100/500/1000/5000/10000/50000 사용, 자릿수 올림 없음 (5단위 0~1개, 1단위 0~4개)
+          let hasFiveUnit = false;
+          for (let attempt = 0; attempt < 30; attempt++) {
+            coins.length = 0;
+            hasFiveUnit = false;
+            const chosenUnits = UNIT1_DENOMS.filter(() => Math.random() < 0.72);
+            if (chosenUnits.length < 2) chosenUnits.push(100, 1000);
+            for (const u of chosenUnits) {
+              const useFive = Math.random() < 0.65 ? 1 : 0;
+              const useOne = randInt(useFive ? 0 : 1, 3);
+              if (useFive) { coins.push(u * 5); hasFiveUnit = true; }
+              for (let i = 0; i < useOne; i++) coins.push(u);
+            }
+            if (hasFiveUnit && coins.length >= 4 && coins.length <= 10) break;
+          }
+          if (!hasFiveUnit) coins.push(500, 100, 1000);
+        } else {
+          // 고급: 1단위/5단위 모두 사용, 항상 자릿수 올림이 발생!
+          const carryScenarios = [
+            // 십의 자리 -> 백의 자리 올림
+            () => {
+              const arr = [];
+              arr.push(50, 50);
+              const extra10 = randInt(2, 4);
+              for (let i = 0; i < extra10; i++) arr.push(10);
+              const c100 = randInt(1, 3);
+              for (let i = 0; i < c100; i++) arr.push(100);
+              if (Math.random() < 0.6) arr.push(500);
+              arr.push(1000);
+              return arr;
+            },
+            // 백의 자리 -> 천의 자리 올림
+            () => {
+              const arr = [];
+              arr.push(500, 500);
+              const c100 = randInt(2, 4);
+              for (let i = 0; i < c100; i++) arr.push(100);
+              if (Math.random() < 0.5) arr.push(50, 10, 10);
+              const c1000 = randInt(1, 3);
+              for (let i = 0; i < c1000; i++) arr.push(1000);
+              if (Math.random() < 0.5) arr.push(5000);
+              return arr;
+            },
+            // 백의 자리 올림 (500원 1개 + 100원 6~7개)
+            () => {
+              const arr = [500];
+              const c100 = randInt(6, 7);
+              for (let i = 0; i < c100; i++) arr.push(100);
+              arr.push(1000, 1000);
+              if (Math.random() < 0.5) arr.push(50, 10);
+              return arr;
+            },
+            // 천의 자리 -> 만의 자리 올림
+            () => {
+              const arr = [];
+              arr.push(5000, 5000);
+              const c1000 = randInt(1, 3);
+              for (let i = 0; i < c1000; i++) arr.push(1000);
+              if (Math.random() < 0.6) arr.push(500, 100, 100);
+              if (Math.random() < 0.5) arr.push(10000);
+              return arr;
+            },
+            // 이중 올림 (십->백 + 백->천)
+            () => {
+              const arr = [50, 50, 10, 10, 10, 500, 500, 100, 100, 1000];
+              if (Math.random() < 0.5) arr.push(5000);
+              return arr;
+            }
+          ];
+          const built = pickRandom(carryScenarios)();
+          coins.push(...built);
+          if (!hasCarry(coins)) coins.push(500, 500);
+        }
+
+        coins.sort((a, b) => b - a);
+        const total = coins.reduce((s, v) => s + v, 0);
+        return {
+          item: { emoji: '🐷', name: '저금통에 모인 돈' },
+          price: 0,
+          paid: 0,
+          paidCoins: [],
+          target: total,
+          countCoins: coins,
+          ruleNote: lv === 3 ? '모아서 다음 자리로 올림이 생겨요!' : ''
+        };
+      }
+
+      // === 3. 거스름돈 문제 생성 (자릿수 간섭 0~1 / 2 / 3회) ===
+      function buildChangeProblem(lv) {
+        let price = 0;
+        let paid = 0;
+        let found = false;
+
+        for (let attempt = 0; attempt < 250; attempt++) {
+          if (lv === 1) {
+            // 초급: 간섭 0회 또는 1회
+            const paidChoices = [500, 1000, 1500, 2000, 3000, 5000, 10000, 20000];
+            const candPaid = pickRandom(paidChoices);
+            let candPrice = 0;
+            if (candPaid <= 1000) {
+              candPrice = randInt(2, Math.floor((candPaid - 100) / 100)) * 100;
+            } else if (candPaid <= 5000) {
+              const minP = Math.max(400, candPaid - 2000);
+              candPrice = randInt(Math.ceil(minP / 100), Math.floor((candPaid - 100) / 100)) * 100;
+            } else {
+              const minP = Math.max(2000, candPaid - 8000);
+              candPrice = randInt(Math.ceil(minP / 1000), Math.floor((candPaid - 1000) / 1000)) * 1000;
+            }
+            if (candPrice > 0 && candPrice < candPaid && countBorrows(candPaid, candPrice) <= 1) {
+              price = candPrice; paid = candPaid; found = true; break;
+            }
+          } else if (lv === 2) {
+            // 중급: 간섭 정확히 2회 (예: 3000 - 1630, 10000 - 6500, 5000 - 2450)
+            const type = pickRandom(['ten', 'hundred']);
+            if (type === 'ten') {
+              const candPaid = pickRandom([1000, 2000, 3000, 4000, 5000]);
+              const minP = Math.max(310, candPaid - 2500);
+              const candPrice = randInt(Math.ceil(minP / 10), Math.floor((candPaid - 110) / 10)) * 10;
+              if (candPrice % 100 !== 0 && countBorrows(candPaid, candPrice) === 2) {
+                price = candPrice; paid = candPaid; found = true; break;
+              }
+            } else {
+              const candPaid = pickRandom([10000, 20000, 30000, 50000]);
+              const minP = Math.max(2100, candPaid - 15000);
+              const candPrice = randInt(Math.ceil(minP / 100), Math.floor((candPaid - 600) / 100)) * 100;
+              if (candPrice % 1000 !== 0 && countBorrows(candPaid, candPrice) === 2) {
+                price = candPrice; paid = candPaid; found = true; break;
+              }
+            }
+          } else {
+            // 고급: 간섭 정확히 3회 (예: 10000 - 6550, 20000 - 13480, 50000 - 26450)
+            const candPaid = pickRandom([10000, 20000, 30000, 50000]);
+            const minP = Math.max(3210, candPaid - 28000);
+            const candPrice = randInt(Math.ceil(minP / 10), Math.floor((candPaid - 1110) / 10)) * 10;
+            if (candPrice % 100 !== 0 && countBorrows(candPaid, candPrice) === 3) {
+              price = candPrice; paid = candPaid; found = true; break;
+            }
+          }
+        }
+
+        // 안전 fallback
+        if (!found) {
+          if (lv === 1) { price = 1500; paid = 2000; }
+          else if (lv === 2) { price = 1630; paid = 3000; }
+          else { price = 6550; paid = 10000; }
+        }
+
+        const paidCoins = toGreedyCoins(paid);
+        const item = pickProductForPrice(price);
+        return {
+          item,
+          price,
+          paid,
+          paidCoins,
+          target: paid - price,
+          walletDenoms: [...ALL_DENOMS],
+          walletLimits: null,
+          ruleNote: ''
+        };
+      }
+
+      // === 문제 생성 통합 ===
       function generateProblem() {
         isSolved = false;
         trayCoins = [];
         keypadInput = '';
         hideFeedback();
 
-        const item = pickRandom(SHOP_ITEMS);
-        const lv = state.level;
-
-        if (state.mode === 'pay') {
-          let price = 0;
-          if (lv === 1) {
-            price = randInt(2, 18) * 100; // 200 ~ 1,800원
-          } else if (lv === 2) {
-            price = randInt(12, 260) * 10; // 120 ~ 2,600원
-            // 10원 단위가 너무 자주 0이 되지 않게 자연스럽게 유지
-            if (Math.random() < 0.7 && price % 100 === 0) price += pickRandom([10, 20, 30, 50, 60, 80]);
-          } else {
-            price = randInt(12, 165) * 100; // 1,200 ~ 16,500원
-          }
-          currentProblem = { item, price, paid: 0, target: price, countCoins: [] };
-        } else if (state.mode === 'change') {
-          let price = 0;
-          let paid = 0;
-          if (lv === 1) {
-            const paidChoices = [500, 1000, 1500, 2000];
-            paid = pickRandom(paidChoices);
-            const maxStep = Math.floor((paid - 100) / 100);
-            price = randInt(1, maxStep) * 100;
-          } else if (lv === 2) {
-            const paidChoices = [500, 1000, 1500, 2000, 3000];
-            paid = pickRandom(paidChoices);
-            const minPrice = Math.max(100, paid - 1500);
-            const stepMin = Math.ceil(minPrice / 10);
-            const stepMax = Math.floor((paid - 20) / 10);
-            price = randInt(stepMin, stepMax) * 10;
-          } else {
-            const paidChoices = [5000, 10000, 15000, 20000];
-            paid = pickRandom(paidChoices);
-            const minPrice = Math.max(1000, paid - 8500);
-            const stepMin = Math.ceil(minPrice / 100);
-            const stepMax = Math.floor((paid - 200) / 100);
-            price = randInt(stepMin, stepMax) * 100;
-          }
-          currentProblem = { item, price, paid, target: paid - price, countCoins: [] };
-        } else {
-          // 'count' 모드: 3~9개의 동전/지폐 조합 생성
-          const denoms = LEVEL_DENOMS[lv];
-          const count = randInt(3, lv === 2 ? 8 : 7);
-          const coins = [];
-          for (let i = 0; i < count; i++) {
-            coins.push(pickRandom(denoms));
-          }
-          coins.sort((a, b) => b - a);
-          const total = coins.reduce((s, v) => s + v, 0);
-          currentProblem = { item: { emoji: '🐷', name: '저금통에 모인 돈' }, price: 0, paid: 0, target: total, countCoins: coins };
-        }
+        if (state.mode === 'pay') currentProblem = buildPayProblem(state.level);
+        else if (state.mode === 'count') currentProblem = buildCountProblem(state.level);
+        else currentProblem = buildChangeProblem(state.level);
 
         renderUI();
       }
 
       // === 화면 렌더링 ===
       function renderUI() {
-        // 헤더 및 버튼 상태
         scoreVal.textContent = state.score;
         hintBtn.classList.toggle('active', state.hintOn);
         hintBtn.textContent = state.hintOn ? '💡 힌트 ON' : '💡 힌트 OFF';
         soundBtn.textContent = state.soundOn ? '🔊' : '🔇';
 
-        modeGroup.querySelectorAll('.seg-btn').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.mode === state.mode);
+        modeGroup.querySelectorAll('.seg-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.mode === state.mode);
         });
-        levelGroup.querySelectorAll('.seg-btn').forEach(btn => {
-          btn.classList.toggle('active', Number(btn.dataset.level) === state.level);
+        levelGroup.querySelectorAll('.seg-btn').forEach(b => {
+          b.classList.toggle('active', Number(b.dataset.level) === state.level);
         });
 
-        // 문제 카드 렌더링
         const p = currentProblem;
         itemEmoji.textContent = p.item.emoji;
         itemName.textContent = p.item.name;
 
+        // 규칙 배지
+        if (p.ruleNote) {
+          ruleBadge.textContent = p.ruleNote;
+          ruleBadge.classList.add('show');
+        } else {
+          ruleBadge.classList.remove('show');
+        }
+
         if (state.mode === 'pay') {
-          promptLabel.textContent = '물건값만큼 돈을 내주세요!';
-          priceArea.style.display = 'flex';
+          priceTag.style.display = 'inline-flex';
           priceTag.textContent = `${fmt(p.price)}원`;
-          paidTag.style.display = 'none';
+          promptMsg.style.display = 'block';
+          promptMsg.textContent = '물건값만큼 돈을 내주세요!';
+          paidBox.classList.remove('show');
+
           trayTitle.textContent = '💰 계산대 쟁반 (누르면 빠집니다)';
           walletPanel.style.display = 'flex';
           keypadPanel.style.display = 'none';
-          walletHint.textContent = '아래 지갑에서 동전이나 지폐를 눌러 올려주세요';
           renderWallet();
         } else if (state.mode === 'change') {
-          promptLabel.textContent = '손님에게 거스름돈을 주세요!';
-          priceArea.style.display = 'flex';
-          priceTag.textContent = `가격 ${fmt(p.price)}원`;
-          paidTag.style.display = 'block';
-          paidTag.textContent = `낸 돈 ${fmt(p.paid)}원`;
+          priceTag.style.display = 'inline-flex';
+          priceTag.textContent = `${fmt(p.price)}원`;
+          promptMsg.style.display = 'none';
+          paidBox.classList.add('show');
+
+          paidAmountHint.textContent = state.hintOn ? `(${fmt(p.paid)}원)` : '';
+          paidVisual.innerHTML = '';
+          p.paidCoins.forEach(val => {
+            const span = document.createElement('span');
+            span.className = 'money-wrap';
+            span.style.cursor = 'default';
+            span.innerHTML = createMoneySVG(val);
+            paidVisual.appendChild(span);
+          });
+
           trayTitle.textContent = '🤲 거스름돈 쟁반 (누르면 빠집니다)';
           walletPanel.style.display = 'flex';
           keypadPanel.style.display = 'none';
-          walletHint.textContent = '거슬러 줄 돈을 눌러 쟁반에 올려주세요';
           renderWallet();
         } else {
-          promptLabel.textContent = '쟁반 위에 돈이 모두 얼마일까요?';
-          priceArea.style.display = 'none';
+          priceTag.style.display = 'none';
+          promptMsg.style.display = 'block';
+          promptMsg.textContent = '쟁반 위에 돈이 모두 얼마일까요?';
+          paidBox.classList.remove('show');
+
           trayTitle.textContent = '🪙 동전과 지폐를 세어보세요!';
           walletPanel.style.display = 'none';
           keypadPanel.style.display = 'flex';
@@ -1217,33 +1788,83 @@
         updateActionButtons();
       }
 
+      // 지갑 렌더링 (동전 줄 / 지폐 줄 구분 + 중급 남은 개수 제약 반영)
       function renderWallet() {
-        walletGrid.innerHTML = '';
-        const denoms = LEVEL_DENOMS[state.level];
-        denoms.forEach(val => {
-          const el = createMoneyElement(val, true, false);
-          el.addEventListener('click', () => addCoinToTray(val));
-          walletGrid.appendChild(el);
-        });
+        walletArea.innerHTML = '';
+        const denoms = currentProblem.walletDenoms || ALL_DENOMS;
+        const limits = currentProblem.walletLimits;
+
+        // 현재 쟁반에 올라간 각 화폐 개수 계산
+        const usedMap = {};
+        trayCoins.forEach(v => usedMap[v] = (usedMap[v] || 0) + 1);
+
+        const bills = denoms.filter(v => v >= 1000);
+        const coins = denoms.filter(v => v < 1000);
+
+        const makeSlot = (val) => {
+          const isCoin = val < 1000;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `wallet-slot ${isCoin ? 'coin-slot' : 'bill-slot'}`;
+
+          const used = usedMap[val] || 0;
+          let remaining = Infinity;
+          if (limits && typeof limits[val] === 'number') {
+            remaining = Math.max(0, limits[val] - used);
+            if (remaining <= 0) btn.disabled = true;
+          }
+
+          let badgeHTML = '';
+          if (limits && typeof limits[val] === 'number') {
+            badgeHTML = `<span class="limit-badge">${remaining}</span>`;
+          }
+
+          const labelHTML = isCoin ? `<span class="slot-label">${fmt(val)}원</span>` : '';
+          btn.innerHTML = `${createMoneySVG(val)}${labelHTML}${badgeHTML}`;
+          btn.addEventListener('click', () => addCoinToTray(val));
+          return btn;
+        };
+
+        if (bills.length > 0) {
+          const billRow = document.createElement('div');
+          billRow.className = 'wallet-row';
+          bills.forEach(v => billRow.appendChild(makeSlot(v)));
+          walletArea.appendChild(billRow);
+        }
+
+        if (coins.length > 0) {
+          const coinRow = document.createElement('div');
+          coinRow.className = 'wallet-row';
+          coins.forEach(v => coinRow.appendChild(makeSlot(v)));
+          walletArea.appendChild(coinRow);
+        }
       }
 
+      // 쟁반 렌더링
       function renderTray(newestIndex = -1) {
         trayItems.innerHTML = '';
         const list = state.mode === 'count' ? currentProblem.countCoins : trayCoins;
 
-        trayItems.classList.remove('compact', 'super-compact');
-        if (list.length >= 15) {
-          trayItems.classList.add('super-compact');
-        } else if (list.length >= 9) {
-          trayItems.classList.add('compact');
-        }
+        // 지폐 수와 전체 개수에 따라 실제 비율 유지 스케일 자동 선택
+        const billCount = list.filter(v => v >= 1000).length;
+        trayItems.classList.remove('scale-sm', 'scale-xs', 'scale-xxs');
+        if (billCount >= 9 || list.length >= 16) trayItems.classList.add('scale-xxs');
+        else if (billCount >= 6 || list.length >= 11) trayItems.classList.add('scale-xs');
+        else if (billCount >= 4 || list.length >= 7) trayItems.classList.add('scale-sm');
 
         if (list.length === 0) {
-          trayItems.innerHTML = `<div class="tray-empty">쟁반이 비어 있어요.<br/>아래에서 돈을 눌러 올려보세요!</div>`;
+          const msg = state.mode === 'change'
+            ? '거슬러 줄 돈을 아래 지갑에서 눌러 올려주세요!'
+            : '쟁반이 비어 있어요.<br/>아래 지갑에서 동전과 지폐를 눌러 올려보세요!';
+          trayItems.innerHTML = `<div class="tray-empty">${msg}</div>`;
         } else {
           list.forEach((val, idx) => {
             const interactive = state.mode !== 'count';
-            const el = createMoneyElement(val, interactive, idx === newestIndex);
+            const el = document.createElement(interactive ? 'button' : 'div');
+            if (interactive) el.type = 'button';
+            el.className = `money-wrap${val < 1000 ? ' is-coin' : ''}${idx === newestIndex ? ' pop' : ''}`;
+            if (!interactive) el.style.cursor = 'default';
+            el.innerHTML = createMoneySVG(val);
             if (interactive) {
               el.addEventListener('click', () => removeCoinFromTray(idx));
             }
@@ -1251,20 +1872,19 @@
           });
         }
 
-        // 쟁반 상단 합계 / 힌트 표시
+        // 상단 합계 / 힌트
         if (state.mode === 'count') {
           if (isSolved) {
             traySum.textContent = `정답: ${fmt(currentProblem.target)}원`;
             traySum.classList.add('highlight');
           } else if (state.hintOn) {
-            // 힌트 ON이면 화폐별 개수 묶음 안내
             const counts = {};
             list.forEach(v => counts[v] = (counts[v] || 0) + 1);
             const summary = Object.keys(counts)
               .map(Number)
               .sort((a, b) => b - a)
               .map(v => `${fmt(v)}×${counts[v]}`)
-              .join('  ');
+              .join(' ');
             traySum.textContent = summary;
             traySum.classList.remove('highlight');
           } else {
@@ -1273,10 +1893,11 @@
           }
         } else {
           const sum = trayCoins.reduce((a, b) => a + b, 0);
+          const prefix = state.mode === 'change' ? '거스름돈' : '낸 돈';
           if (state.hintOn || isSolved) {
-            traySum.textContent = `낸 돈: ${fmt(sum)}원`;
+            traySum.textContent = `${prefix}: ${fmt(sum)}원`;
           } else {
-            traySum.textContent = `낸 돈: ???원`;
+            traySum.textContent = `${prefix}: ???원`;
           }
           traySum.classList.toggle('highlight', isSolved);
         }
@@ -1301,18 +1922,17 @@
         }
       }
 
-      // === 피드백 표시 ===
+      // === 피드백 ===
       let feedbackTimer = null;
       function showFeedback(type, text, showNext = false) {
         if (feedbackTimer) clearTimeout(feedbackTimer);
         feedbackBar.className = `feedback-bar show ${type}`;
         feedbackText.textContent = text;
         nextBtnInline.style.display = showNext ? 'inline-block' : 'none';
-
         if (!showNext) {
           feedbackTimer = setTimeout(() => {
             if (!isSolved) hideFeedback();
-          }, 2200);
+          }, 2300);
         }
       }
 
@@ -1322,20 +1942,30 @@
         nextBtnInline.style.display = 'none';
       }
 
-      // === 인터랙션 로직 ===
+      // === 인터랙션 ===
       function addCoinToTray(val) {
         if (isSolved) return;
+
+        // 중급 개수 제한 체크
+        const limits = currentProblem.walletLimits;
+        if (limits && typeof limits[val] === 'number') {
+          const used = trayCoins.filter(v => v === val).length;
+          if (used >= limits[val]) return;
+        }
+
         if (trayCoins.length >= MAX_TRAY_ITEMS) {
           playSound('wrong');
-          showFeedback('warn', '쟁반이 가득 찼어요! 더 큰 돈을 써볼까요?');
+          showFeedback('warn', '쟁반이 가득 찼어요! 더 큰 화폐를 써볼까요?');
           return;
         }
+
         trayCoins.push(val);
         trayCoins.sort((a, b) => b - a);
         const addedIdx = trayCoins.indexOf(val);
         playSound(val >= 1000 ? 'bill' : 'coin');
         hideFeedback();
         renderTray(addedIdx);
+        renderWallet();
       }
 
       function removeCoinFromTray(idx) {
@@ -1344,13 +1974,11 @@
         playSound('pop');
         hideFeedback();
         renderTray();
+        renderWallet();
       }
 
       function checkTrayAnswer() {
-        if (isSolved) {
-          generateProblem();
-          return;
-        }
+        if (isSolved) { generateProblem(); return; }
         const sum = trayCoins.reduce((a, b) => a + b, 0);
         const target = currentProblem.target;
 
@@ -1371,16 +1999,13 @@
           const diff = sum - target;
           const msg = state.hintOn
             ? `조금 많아요! (${fmt(diff)}원 빼볼까요?)`
-            : '조금 많이 냈어요! 돈을 눌러서 빼볼까요?';
+            : '조금 많이 올렸어요! 쟁반의 돈을 눌러 빼볼까요?';
           showFeedback('err', msg);
         }
       }
 
       function checkKeypadAnswer() {
-        if (isSolved) {
-          generateProblem();
-          return;
-        }
+        if (isSolved) { generateProblem(); return; }
         if (keypadInput === '') {
           playSound('wrong');
           showFeedback('warn', '숫자 버튼을 눌러 금액을 적어주세요!');
@@ -1410,15 +2035,15 @@
         const cheers = [
           '정답이에요! 참 잘했어요! 🎉',
           '딩동댕! 계산 박사님이네요! 🌟',
-          '완벽해요! 최고예요! 👏',
-          '멋져요! 정확하게 맞혔어요! 🏆'
+          '완벽해요! 정확하게 맞혔어요! 👏',
+          '멋져요! 진짜 가게 사장님 같아요! 🏆'
         ];
         showFeedback('ok', pickRandom(cheers), true);
         renderTray();
         updateActionButtons();
       }
 
-      // === 이벤트 바인딩 ===
+      // === 이벤트 연결 ===
       modeGroup.addEventListener('click', e => {
         const btn = e.target.closest('.seg-btn');
         if (!btn) return;
@@ -1463,6 +2088,7 @@
         playSound('pop');
         hideFeedback();
         renderTray();
+        renderWallet();
       });
 
       checkTrayBtn.addEventListener('click', checkTrayAnswer);
@@ -1475,54 +2101,40 @@
         const btn = e.target.closest('.key-btn');
         if (!btn) return;
         const key = btn.dataset.key;
-
-        if (key === 'submit') {
-          checkKeypadAnswer();
-          return;
-        }
+        if (key === 'submit') { checkKeypadAnswer(); return; }
         if (isSolved) return;
 
         playSound('pop');
         hideFeedback();
 
-        if (key === 'clear') {
-          keypadInput = '';
-        } else if (key === 'back') {
-          keypadInput = keypadInput.slice(0, -1);
-        } else {
+        if (key === 'clear') keypadInput = '';
+        else if (key === 'back') keypadInput = keypadInput.slice(0, -1);
+        else {
           if (keypadInput === '0') keypadInput = '';
           const next = keypadInput + key;
-          if (next.length <= 6) {
-            keypadInput = next.replace(/^0+(?=\d)/, '');
-          }
+          if (next.length <= 6) keypadInput = next.replace(/^0+(?=\d)/, '');
         }
         renderKeypadDisplay();
       });
 
-      // === PWA 설치 & 서비스 워커 등록 ===
+      // === PWA 설치 & 서비스 워커 ===
       let deferredPrompt = null;
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
       const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-      if (!isStandalone && isIOS) {
-        installBtn.style.display = 'inline-flex';
-      }
+      if (!isStandalone && isIOS) installBtn.style.display = 'inline-flex';
 
       window.addEventListener('beforeinstallprompt', e => {
         e.preventDefault();
         deferredPrompt = e;
-        if (!isStandalone) {
-          installBtn.style.display = 'inline-flex';
-        }
+        if (!isStandalone) installBtn.style.display = 'inline-flex';
       });
 
       installBtn.addEventListener('click', async () => {
         if (deferredPrompt) {
           deferredPrompt.prompt();
           const { outcome } = await deferredPrompt.userChoice;
-          if (outcome === 'accepted') {
-            installBtn.style.display = 'none';
-          }
+          if (outcome === 'accepted') installBtn.style.display = 'none';
           deferredPrompt = null;
         } else if (isIOS) {
           iosModal.classList.add('show');
@@ -1539,18 +2151,15 @@
         if (e.target === iosModal) iosModal.classList.remove('show');
       });
 
-      // 서비스 워커 등록 (네트워크 우선 전략으로 코드 수정 시 즉시 반영)
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
-            .then(reg => {
-              reg.update();
-            })
+            .then(reg => reg.update())
             .catch(() => {});
         });
       }
 
-      // 앱 시작
+      // 시작
       generateProblem();
     })();
   </script>
